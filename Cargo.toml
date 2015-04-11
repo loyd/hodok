@@ -1,0 +1,14 @@
+[package]
+name = "rusty"
+version = "0.0.0-42"
+authors = ["Paul Loyd <pavelko95@gmail.com>"]
+
+[dependencies]
+byteorder = "*"
+httparse = "*"
+rustc-serialize = "*"
+sha1 = "*"
+
+[dependencies.rscam]
+version = "*"
+features = ["no_wrapper"]
