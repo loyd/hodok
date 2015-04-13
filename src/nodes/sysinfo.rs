@@ -73,6 +73,12 @@ impl SysInformer {
         ((d_total - d_idle) * 255 / d_total) as u8
     }
 
+    fn get_temp(&self) -> i8 {
+        let content = self.read_file("/sys/class/thermal/thermal_zone0/temp");
+
+        (content.trim_right().parse::<f32>().unwrap() / 1000.).round() as i8
+    }
+
     fn read_file(&self, path: &str) -> String {
         let mut file = File::open(path).unwrap();
         let mut string = String::new();
@@ -102,12 +108,14 @@ impl Node for SysInformer {
             let (free_mem, avail_mem) = self.get_mem();
             let cpu = self.get_cpu();
             let loadavg = self.get_loadavg();
+            let temp = self.get_temp();
 
             self.info.send(SysInfo {
                 free_mem: free_mem,
                 avail_mem: avail_mem,
                 cpu: cpu,
-                loadavg: loadavg
+                loadavg: loadavg,
+                temp: temp
             });
         }
     }

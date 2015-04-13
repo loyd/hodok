@@ -6,5 +6,6 @@ pub struct SysInfo {
     pub free_mem: u8,
     pub avail_mem: u8,
     pub cpu: u8,
-    pub loadavg: (u8, u8, u8)
+    pub loadavg: (u8, u8, u8),
+    pub temp: i8
 }
