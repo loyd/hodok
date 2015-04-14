@@ -16,18 +16,20 @@ use rustc_serialize::base64::{self, ToBase64};
 use sha1::Sha1;
 
 use constants;
-use messages::{Attitude, VideoFrame};
+use messages::{Attitude, VideoFrame, SysInfo};
 use super::{Node, Input};
 
 
 pub struct Server {
+    pub video_frame: Input<VideoFrame>,
     pub attitude: Input<Attitude>,
-    pub video_frame: Input<VideoFrame>
+    pub sysinfo: Input<SysInfo>
 }
 
 struct Handler {
+    video: Option<TcpStream>,
     attitude: Option<TcpStream>,
-    video: Option<TcpStream>
+    sysinfo: Option<TcpStream>
 }
 
 impl Handler {
@@ -101,8 +103,9 @@ impl Handler {
         stream.write(b"\r\n\r\n");
 
         match path {
-            "/attitude" => self.attitude = Some(stream),
             "/video" => self.video = Some(stream),
+            "/attitude" => self.attitude = Some(stream),
+            "/sysinfo" => self.sysinfo = Some(stream),
             _ => {}
         }
     }
@@ -122,6 +125,16 @@ impl Handler {
         out.to_base64(base64::STANDARD)
     }
 
+    fn send_video_frame(&mut self, frame: &VideoFrame) {
+        let mut stream = self.video.take();
+
+        if let Some(ref mut ws) = stream {
+            self.send_ws(ws, &frame[..]);
+        }
+
+        self.video = stream;
+    }
+
     fn send_attitude(&mut self, attitude: &Attitude) {
         let mut stream = self.attitude.take();
 
@@ -133,14 +146,15 @@ impl Handler {
         self.attitude = stream;
     }
 
-    fn send_video_frame(&mut self, frame: &VideoFrame) {
-        let mut stream = self.video.take();
+    fn send_sysinfo(&mut self, sysinfo: &SysInfo) {
+        let mut stream = self.sysinfo.take();
 
         if let Some(ref mut ws) = stream {
-            self.send_ws(ws, &frame[..]);
+            let data: &[u8; 7] = unsafe { mem::transmute(sysinfo) };
+            self.send_ws(ws, data);
         }
 
-        self.video = stream;
+        self.sysinfo = stream;
     }
 
     fn send_ws(&self, stream: &mut TcpStream, data: &[u8]) {
@@ -170,15 +184,16 @@ impl Handler {
 impl Node for Server {
     fn new() -> Server {
         Server {
+            video_frame: Input::new(),
             attitude: Input::new(),
-            video_frame: Input::new()
+            sysinfo: Input::new()
         }
     }
 
     fn main(&mut self) {
         println!("====================");
 
-        let mut spriv = Handler { attitude: None, video: None };
+        let mut spriv = Handler { video: None, attitude: None, sysinfo: None };
 
         let (tx_tcp, rx_tcp) = mpsc::channel();
         thread::spawn(move || {
