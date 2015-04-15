@@ -1,5 +1,6 @@
 {
     "dependencies": {
+        "domready": "^1.0.7",
         "smoothie": "^1.27.0"
     },
 
