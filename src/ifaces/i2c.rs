@@ -3,7 +3,7 @@ use std::io::Error as IoError;
 use std::io::Result as IoResult;
 use std::mem;
 
-use libc::{open, write, read, close, O_RDWR, c_int, size_t};
+use libc::{open, write, read, close, O_RDWR, c_void, c_int, size_t};
 
 
 const I2C_SLAVE: c_int = 0x0703;
@@ -29,7 +29,7 @@ impl I2C {
         let c_str = CString::new(format!("/dev/i2c-{}", bus)).unwrap();
         let fd = unsafe { open(c_str.as_ptr(), O_RDWR, 0) };
 
-        check_io!(fd != 0);
+        check_io!(fd != -1);
         check_io!(unsafe { ioctl(fd, I2C_SLAVE, addr as c_int) >= 0 });
 
         Ok(I2C { fd: fd, addr: addr })
@@ -37,7 +37,7 @@ impl I2C {
 
     pub fn write(&self, buf: &[u8]) -> IoResult<()> {
         let bytes = unsafe {
-            write(self.fd, mem::transmute(buf.as_ptr()), buf.len() as size_t)
+            write(self.fd, buf.as_ptr() as *const c_void, buf.len() as size_t)
         };
 
         check_io!(bytes as usize == buf.len());
@@ -48,7 +48,7 @@ impl I2C {
         check_io!(unsafe { write(self.fd, mem::transmute(&reg), 1) == 1 });
 
         let bytes = unsafe {
-            read(self.fd, mem::transmute(buf.as_mut_ptr()), buf.len() as size_t)
+            read(self.fd, buf.as_mut_ptr() as *mut c_void, buf.len() as size_t)
         };
 
         check_io!(bytes as usize == buf.len());
