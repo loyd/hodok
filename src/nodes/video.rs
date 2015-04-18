@@ -4,7 +4,7 @@ use rscam::{Camera, Config};
 
 use constants;
 use messages::VideoFrame;
-use super::{Node, Output};
+use nodes::{Node, Output};
 
 
 pub struct Video {

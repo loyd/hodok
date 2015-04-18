@@ -1,12 +1,10 @@
 use std::mem;
-use std::old_io::Timer;
-use std::time::Duration;
 
 use constants;
 use math::Madgwick;
 use messages::Attitude;
+use nodes::{Node, Output, timer};
 use periphery::{Adxl345, Hmc5883l, L3g4200d};
-use super::{Node, Output};
 
 
 pub struct Ahrs {
@@ -22,9 +20,6 @@ impl Node for Ahrs {
 
     fn main(&mut self) {
         let rate = constants::AHRS_RATE;
-
-        let duration = Duration::milliseconds((1000./rate) as i64);
-        let mut timer = Timer::new().unwrap();
 
         let mut accel = Adxl345::new(constants::AHRS_I2C_BUS).unwrap();
         accel.set_rate(rate).unwrap();
@@ -43,11 +38,7 @@ impl Node for Ahrs {
         accel.start().unwrap();
         magn.start().unwrap();
 
-        let waiter = timer.periodic(duration);
-
-        loop {
-            waiter.recv().unwrap();
-
+        for _ in timer(rate).iter() {
             let (gx, gy, gz) = gyro.measure().unwrap();
 
             let g = (gx.to_radians(), gy.to_radians(), gz.to_radians());

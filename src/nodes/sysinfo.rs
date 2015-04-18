@@ -1,11 +1,9 @@
 use std::fs::File;
 use std::io::Read;
-use std::old_io::Timer;
-use std::time::Duration;
 
 use constants;
 use messages::SysInfo;
-use super::{Node, Output};
+use nodes::{Node, Output, timer};
 
 
 pub struct SysInformer {
@@ -98,13 +96,9 @@ impl Node for SysInformer {
     }
 
     fn main(&mut self) {
-        let duration = Duration::milliseconds((1000./constants::SYSINFO_RATE) as i64);
-        let mut timer = Timer::new().unwrap();
-        let waiter = timer.periodic(duration);
+        let rate = constants::SYSINFO_RATE;
 
-        loop {
-            waiter.recv().unwrap();
-
+        for _ in timer(rate).iter() {
             let (free_mem, avail_mem) = self.get_mem();
             let cpu = self.get_cpu();
             let loadavg = self.get_loadavg();

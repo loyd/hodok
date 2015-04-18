@@ -13,7 +13,7 @@ pub trait Node: Send + Sized + 'static {
 
     fn main(&mut self);
 
-    fn start(mut self) -> thread::JoinHandle {
+    fn start(mut self) -> thread::JoinHandle<()> {
         thread::spawn(move || {
             self.main();
         })
@@ -51,4 +51,17 @@ impl<O: Send + Sync> Output<O> {
             receiver.send(arc.clone()).unwrap();
         }
     }
+}
+
+
+pub fn timer(rate: f32) -> Receiver<()> {
+    let period = (1000./rate).ceil() as u32;
+    let (tx, rx) = mpsc::channel();
+
+    thread::spawn(move || {
+        thread::sleep_ms(period);
+        tx.send(()).unwrap();
+    });
+
+    rx
 }

@@ -17,7 +17,7 @@ use sha1::Sha1;
 
 use constants;
 use messages::{Attitude, VideoFrame, SysInfo};
-use super::{Node, Input};
+use nodes::{Node, Input};
 
 
 pub struct Server {
