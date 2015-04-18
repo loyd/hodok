@@ -19,7 +19,7 @@ impl Node for Video {
     }
 
     fn main(&mut self) {
-        let mut camera = Camera::new(constants::VIDEO_PATH).unwrap();
+        let mut camera = Camera::new(constants::VIDEO_DEVICE).unwrap();
 
         ::std::thread::sleep_ms(10_000);
         println!(">>>> video start");

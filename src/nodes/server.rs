@@ -1,8 +1,6 @@
 use std::collections::HashMap;
-use std::convert::Into;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::Result as IoResult;
 use std::mem;
 use std::net::{TcpListener, TcpStream};
 use std::path::Path;
@@ -45,7 +43,7 @@ impl Handler {
 
     fn parse_req(&self, stream: &mut TcpStream) -> (String, HashMap<String, String>) {
         let mut data = [0; 4096];
-        let size = stream.read(&mut data).unwrap();
+        stream.read(&mut data).unwrap();
 
         let mut headers_buf = [httparse::EMPTY_HEADER; 16];
         let mut req = httparse::Request::new(&mut headers_buf);
@@ -63,7 +61,7 @@ impl Handler {
         (path, headers)
     }
 
-    fn handle_http(&self, mut stream: TcpStream, path: &str) {
+    fn handle_http(&self, stream: TcpStream, path: &str) {
         match path {
             "/" | "/index.html" => self.send_file(stream, "index.html"),
             "/bundle.js" => self.send_file(stream, "bundle.js"),
@@ -97,10 +95,10 @@ impl Handler {
         stream.write(b"HTTP/1.1 101 Switching Protocols\r\n\
                        Upgrade: websocket\r\n\
                        Connection: Upgrade\r\n\
-                       Sec-WebSocket-Accept: ");
+                       Sec-WebSocket-Accept: ").unwrap();
 
-        stream.write(self.compute_accept(key).as_bytes());
-        stream.write(b"\r\n\r\n");
+        stream.write(self.compute_accept(key).as_bytes()).unwrap();
+        stream.write(b"\r\n\r\n").unwrap();
 
         match path {
             "/video" => self.video = Some(stream),
@@ -201,7 +199,7 @@ impl Node for Server {
             let listener = TcpListener::bind(addr).unwrap();
 
             for stream in listener.incoming() {
-                tx_tcp.send(stream.unwrap());
+                tx_tcp.send(stream.unwrap()).unwrap();
             }
         });
 

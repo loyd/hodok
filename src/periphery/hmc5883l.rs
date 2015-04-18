@@ -1,6 +1,5 @@
 use std::convert::From;
 use std::io::Error as IoError;
-use std::num::Float;
 use std::result;
 
 use ifaces::I2C;
@@ -28,17 +27,17 @@ pub struct Hmc5883l {
 }
 
 impl Hmc5883l {
-    pub fn new(i2c_bus: u32) -> Result<Hmc5883l> {
-        Hmc5883l::with_addr(i2c_bus, 0x1e)
+    pub fn new(bus: &str) -> Result<Hmc5883l> {
+        Hmc5883l::with_addr(bus, 0x1e)
     }
 
-    pub fn with_addr(i2c_bus: u32, addr: u16) -> Result<Hmc5883l> {
-        let underline = try!(I2C::open(i2c_bus, addr));
+    pub fn with_addr(bus: &str, addr: u16) -> Result<Hmc5883l> {
+        let underline = try!(I2C::open(bus, addr));
         try!(Hmc5883l::identify(&underline));
         Ok(Hmc5883l {
             underline: underline,
             running: false,
-            gain: Float::nan(),
+            gain: 0.,
             buf: [0; 6]
         })
     }

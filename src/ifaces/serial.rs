@@ -1,7 +1,6 @@
 use std::ffi::CString;
 use std::io::Error as IoError;
 use std::io::Result as IoResult;
-use std::mem;
 
 use libc::{open, write, read, close, O_RDWR, O_NOCTTY};
 use libc::{c_void, c_uchar, c_int, c_uint, size_t};

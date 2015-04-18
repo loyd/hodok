@@ -21,15 +21,15 @@ impl Node for Ahrs {
     fn main(&mut self) {
         let rate = constants::AHRS_RATE;
 
-        let mut accel = Adxl345::new(constants::AHRS_I2C_BUS).unwrap();
+        let mut accel = Adxl345::new(constants::AHRS_DEVICE).unwrap();
         accel.set_rate(rate).unwrap();
         accel.set_range(constants::ACCEL_RANGE).unwrap();
 
-        let mut magn = Hmc5883l::new(constants::AHRS_I2C_BUS).unwrap();
+        let mut magn = Hmc5883l::new(constants::AHRS_DEVICE).unwrap();
         magn.set_rate(rate).unwrap();
         magn.set_range(constants::MAGN_RANGE).unwrap();
 
-        let mut gyro = L3g4200d::new(constants::AHRS_I2C_BUS).unwrap();
+        let mut gyro = L3g4200d::new(constants::AHRS_DEVICE).unwrap();
         gyro.set_rate(rate).unwrap();
         gyro.set_range(constants::GYRO_RANGE).unwrap();
 

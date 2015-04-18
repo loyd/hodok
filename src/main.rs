@@ -1,4 +1,5 @@
-#![feature(libc, std_misc, old_io, str_words)]
+#![feature(libc, std_misc, str_words)]
+#![allow(dead_code)]
 extern crate byteorder;
 extern crate httparse;
 extern crate libc;

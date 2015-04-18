@@ -19,25 +19,22 @@ macro_rules! check_io(
         (if !$cond { return Err(IoError::last_os_error()); })
 );
 
-pub struct I2C {
-    fd: c_int,
-    addr: u16
-}
+pub struct I2C(c_int);
 
 impl I2C {
-    pub fn open(bus: u32, addr: u16) -> IoResult<I2C> {
-        let c_str = CString::new(format!("/dev/i2c-{}", bus)).unwrap();
+    pub fn open(bus: &str, addr: u16) -> IoResult<I2C> {
+        let c_str = CString::new(bus).unwrap();
         let fd = unsafe { open(c_str.as_ptr(), O_RDWR, 0) };
 
         check_io!(fd != -1);
         check_io!(unsafe { ioctl(fd, I2C_SLAVE, addr as c_int) >= 0 });
 
-        Ok(I2C { fd: fd, addr: addr })
+        Ok(I2C(fd))
     }
 
     pub fn write(&self, buf: &[u8]) -> IoResult<()> {
         let bytes = unsafe {
-            write(self.fd, buf.as_ptr() as *const c_void, buf.len() as size_t)
+            write(self.0, buf.as_ptr() as *const c_void, buf.len() as size_t)
         };
 
         check_io!(bytes as usize == buf.len());
@@ -45,10 +42,10 @@ impl I2C {
     }
 
     pub fn read(&self, reg: u8, buf: &mut [u8]) -> IoResult<()> {
-        check_io!(unsafe { write(self.fd, mem::transmute(&reg), 1) == 1 });
+        check_io!(unsafe { write(self.0, mem::transmute(&reg), 1) == 1 });
 
         let bytes = unsafe {
-            read(self.fd, buf.as_mut_ptr() as *mut c_void, buf.len() as size_t)
+            read(self.0, buf.as_mut_ptr() as *mut c_void, buf.len() as size_t)
         };
 
         check_io!(bytes as usize == buf.len());
@@ -58,6 +55,6 @@ impl I2C {
 
 impl Drop for I2C {
     fn drop(&mut self) {
-        unsafe { close(self.fd); }
+        unsafe { close(self.0); }
     }
 }

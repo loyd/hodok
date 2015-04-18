@@ -1,6 +1,5 @@
 use std::convert::From;
 use std::io::Error as IoError;
-use std::num::Float;
 use std::result;
 
 use ifaces::I2C;
@@ -28,17 +27,17 @@ pub struct Adxl345 {
 }
 
 impl Adxl345 {
-    pub fn new(i2c_bus: u32) -> Result<Adxl345> {
-        Adxl345::with_addr(i2c_bus, 0x53)
+    pub fn new(bus: &str) -> Result<Adxl345> {
+        Adxl345::with_addr(bus, 0x53)
     }
 
-    pub fn with_addr(i2c_bus: u32, addr: u16) -> Result<Adxl345> {
-        let underline = try!(I2C::open(i2c_bus, addr));
+    pub fn with_addr(bus: &str, addr: u16) -> Result<Adxl345> {
+        let underline = try!(I2C::open(bus, addr));
         try!(Adxl345::identify(&underline));
         Ok(Adxl345 {
             underline: underline,
             running: false,
-            gain: Float::nan(),
+            gain: 0.,
             buf: [0; 6]
         })
     }

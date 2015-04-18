@@ -1,6 +1,5 @@
 use std::convert::From;
 use std::io::Error as IoError;
-use std::num::Float;
 use std::result;
 
 use ifaces::I2C;
@@ -28,17 +27,17 @@ pub struct L3g4200d {
 }
 
 impl L3g4200d {
-    pub fn new(i2c_bus: u32) -> Result<L3g4200d> {
-        L3g4200d::with_addr(i2c_bus, 0x69)
+    pub fn new(bus: &str) -> Result<L3g4200d> {
+        L3g4200d::with_addr(bus, 0x69)
     }
 
-    pub fn with_addr(i2c_bus: u32, addr: u16) -> Result<L3g4200d> {
-        let underline = try!(I2C::open(i2c_bus, addr));
+    pub fn with_addr(bus: &str, addr: u16) -> Result<L3g4200d> {
+        let underline = try!(I2C::open(bus, addr));
         try!(L3g4200d::identify(&underline));
         Ok(L3g4200d {
             underline: underline,
             running: false,
-            gain: Float::nan(),
+            gain: 0.,
             buf: [0; 6]
         })
     }

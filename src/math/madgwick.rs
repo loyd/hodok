@@ -34,13 +34,13 @@ impl Madgwick {
         // Compute feedback only if accelerometer measurement valid.
         if !((ax == 0.) && (ay == 0.) && (az == 0.)) {
             // Normalize accelerometer measurement.
-            recip_norm = (ax*ax + ay*ay + az*az).rsqrt();
+            recip_norm = (ax*ax + ay*ay + az*az).sqrt().recip();
             ax *= recip_norm;
             ay *= recip_norm;
             az *= recip_norm;
 
             // Normalize magnetometer measurement.
-            recip_norm = (mx*mx + my*my + mz*mz).rsqrt();
+            recip_norm = (mx*mx + my*my + mz*mz).sqrt().recip();
             mx *= recip_norm;
             my *= recip_norm;
             mz *= recip_norm;
@@ -102,7 +102,7 @@ impl Madgwick {
                      * (q0q1 + q2q3) - my) + _2bx * q.1 * (_2bx * (q0q2 + q1q3) + _2bz * (0.5
                      - q1q1 - q2q2) - mz));
 
-            recip_norm = (s.0*s.0 + s.1*s.1 + s.2*s.2 + s.3*s.3).rsqrt();
+            recip_norm = (s.0*s.0 + s.1*s.1 + s.2*s.2 + s.3*s.3).sqrt().recip();
 
             // Apply feedback step.
             qdot.0 -= self.beta * s.0 * recip_norm;
@@ -118,7 +118,7 @@ impl Madgwick {
         q.3 = qdot.3.mul_add(dt, q.3);
 
         // Normalize quaternion.
-        recip_norm = (q.0*q.0 + q.1*q.1 + q.2*q.2 + q.3*q.3).rsqrt();
+        recip_norm = (q.0*q.0 + q.1*q.1 + q.2*q.2 + q.3*q.3).sqrt().recip();
         self.attitude.0 = q.0 * recip_norm;
         self.attitude.1 = q.1 * recip_norm;
         self.attitude.2 = q.2 * recip_norm;
