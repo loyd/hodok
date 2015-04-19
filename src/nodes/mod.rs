@@ -59,8 +59,10 @@ pub fn timer(rate: f32) -> Receiver<()> {
     let (tx, rx) = mpsc::channel();
 
     thread::spawn(move || {
-        thread::sleep_ms(period);
-        tx.send(()).unwrap();
+        loop {
+            thread::sleep_ms(period);
+            tx.send(()).unwrap();
+        }
     });
 
     rx
