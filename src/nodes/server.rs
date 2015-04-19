@@ -203,14 +203,16 @@ impl Node for Server {
             }
         });
 
-        let rx_att = &self.attitude.1;
         let rx_vid = &self.video_frame.1;
+        let rx_att = &self.attitude.1;
+        let rx_sys = &self.sysinfo.1;
 
         loop {
             select! {
                 stream = rx_tcp.recv() => spriv.handle(stream.unwrap()),
+                frame = rx_vid.recv() => spriv.send_video_frame(&*frame.unwrap()),
                 attitude = rx_att.recv() => spriv.send_attitude(&*attitude.unwrap()),
-                frame = rx_vid.recv() => spriv.send_video_frame(&*frame.unwrap())
+                sysinfo = rx_sys.recv() => spriv.send_sysinfo(&*sysinfo.unwrap())
             }
         }
     }

@@ -1,5 +1,5 @@
 pub const AHRS_DEVICE: &'static str = "/dev/i2c-1";
-pub const AHRS_RATE: f32 = 30.;     // [Hz]
+pub const AHRS_RATE: f32 = 25.;     // [Hz]
 pub const ACCEL_RANGE: f32 = 2.;    // [g]
 pub const MAGN_RANGE: f32 = 4.;     // [Gauss]
 pub const GYRO_RANGE: f32 = 250.;   // [°/s]

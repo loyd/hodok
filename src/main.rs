@@ -18,16 +18,17 @@ use nodes::Node;
 
 
 fn main() {
-    // let sysinfo = nodes::sysinfo::SysInformer::new();
-    // let server = nodes::server::Server::new();
-    // let mut video = nodes::video::Video::new();
-    // let mut ahrs = nodes::ahrs::Ahrs::new();
+    let mut ahrs = nodes::ahrs::Ahrs::new();
+    let mut server = nodes::server::Server::new();
+    let mut sysinfo = nodes::sysinfo::SysInformer::new();
+    let mut video = nodes::video::Video::new();
 
-    // ahrs.attitude.pipe(&server.attitude);
-    // video.video_frame.pipe(&server.video_frame);
+    ahrs.attitude.pipe(&server.attitude);
+    video.video_frame.pipe(&server.video_frame);
+    sysinfo.info.pipe(&server.sysinfo);
 
-    // ahrs.start();
-    // video.start();
-    // sysinfo.start();
-    // server.start().join();
+    ahrs.start();
+    server.start();
+    sysinfo.start();
+    video.start().join();
 }
