@@ -32,6 +32,7 @@ impl I2C {
         Ok(I2C(fd))
     }
 
+    #[inline]
     pub fn write(&self, buf: &[u8]) -> IoResult<()> {
         let bytes = unsafe {
             write(self.0, buf.as_ptr() as *const c_void, buf.len() as size_t)
@@ -41,6 +42,7 @@ impl I2C {
         Ok(())
     }
 
+    #[inline]
     pub fn read(&self, reg: u8, buf: &mut [u8]) -> IoResult<()> {
         check_io!(unsafe { write(self.0, mem::transmute(&reg), 1) == 1 });
 

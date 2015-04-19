@@ -68,6 +68,7 @@ impl Serial {
         Ok(Serial(fd))
     }
 
+    #[inline]
     pub fn write(&self, buf: &[u8]) -> IoResult<()> {
         let bytes = unsafe {
             write(self.0, buf.as_ptr() as *const c_void, buf.len() as size_t)
@@ -77,6 +78,7 @@ impl Serial {
         Ok(())
     }
 
+    #[inline]
     pub fn read(&self, buf: &mut [u8]) -> IoResult<()> {
         let bytes = unsafe {
             read(self.0, buf.as_mut_ptr() as *mut c_void, buf.len() as size_t)
