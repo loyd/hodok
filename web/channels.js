@@ -17,7 +17,7 @@ class Channel extends Duplex {
         socket.onclose = (e) => {
             console.log(`${name} onclose`, arguments);
             if (!e.wasClean)
-                this.on('error', e);
+                this.emit('error', e);
 
             this.push(null);
         };
