@@ -1,5 +1,5 @@
 use std::convert::From;
-use std::io::Error as IoError;
+use std::io;
 use std::result;
 
 use ifaces::I2C;
@@ -9,12 +9,12 @@ pub type Result<T> = result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
-    Io(IoError),
+    Io(io::Error),
     Unidentified
 }
 
-impl From<IoError> for Error {
-    fn from(err: IoError) -> Error {
+impl From<io::Error> for Error {
+    fn from(err: io::Error) -> Error {
         Error::Io(err)
     }
 }

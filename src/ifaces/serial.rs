@@ -1,9 +1,9 @@
 use std::ffi::CString;
-use std::io::Error as IoError;
-use std::io::Result as IoResult;
+use std::io;
 
 use libc::{open, write, read, close, O_RDWR, O_NOCTTY};
 use libc::{c_void, c_uchar, c_int, c_uint, size_t};
+
 
 #[repr(C)]
 struct Termios {
@@ -36,14 +36,14 @@ extern {
 
 macro_rules! check_io(
     ($cond:expr) =>
-        (if !$cond { return Err(IoError::last_os_error()); })
+        (if !$cond { return Err(io::Error::last_os_error()); })
 );
 
 pub struct Serial(c_int);
 
 impl Serial {
-    pub fn open(device: &str) -> IoResult<Serial> {
-        let c_str = CString::new(device.to_string()).unwrap();
+    pub fn open(device: &str) -> io::Result<Serial> {
+        let c_str = CString::new(device).unwrap();
         let fd = unsafe { open(c_str.as_ptr(), O_RDWR|O_NOCTTY, 0) };
         check_io!(fd != -1);
 
@@ -69,7 +69,7 @@ impl Serial {
     }
 
     #[inline]
-    pub fn write(&self, buf: &[u8]) -> IoResult<()> {
+    pub fn write(&self, buf: &[u8]) -> io::Result<()> {
         let bytes = unsafe {
             write(self.0, buf.as_ptr() as *const c_void, buf.len() as size_t)
         };
@@ -79,7 +79,7 @@ impl Serial {
     }
 
     #[inline]
-    pub fn read(&self, buf: &mut [u8]) -> IoResult<()> {
+    pub fn read(&self, buf: &mut [u8]) -> io::Result<()> {
         let bytes = unsafe {
             read(self.0, buf.as_mut_ptr() as *mut c_void, buf.len() as size_t)
         };

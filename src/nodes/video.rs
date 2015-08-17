@@ -26,7 +26,7 @@ impl Node for Video {
 
         camera.start(&Config {
             interval: (1, constants::VIDEO_FPS),
-            resolution: constants::VIDEO_RESOL,
+            resolution: constants::VIDEO_RESOLUTION,
             format: b"H264",
             ..Default::default()
         }).unwrap();

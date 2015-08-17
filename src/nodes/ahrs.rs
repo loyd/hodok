@@ -1,3 +1,4 @@
+use std::f32::consts::PI;
 use std::mem;
 
 use constants;
@@ -41,7 +42,8 @@ impl Node for Ahrs {
         for _ in timer(rate).iter() {
             let (gx, gy, gz) = gyro.measure().unwrap();
 
-            let g = (gx.to_radians(), gy.to_radians(), gz.to_radians());
+            const DEG_TO_RAD: f32 = PI / 180.0;
+            let g = (gx * DEG_TO_RAD, gy * DEG_TO_RAD, gz * DEG_TO_RAD);
             let a = accel.measure().unwrap();
             let m = magn.measure().unwrap();
 

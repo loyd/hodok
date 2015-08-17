@@ -1,5 +1,5 @@
-#![feature(libc, std_misc, str_words)]
 #![allow(dead_code)]
+#![feature(mpsc_select)]
 extern crate byteorder;
 extern crate httparse;
 extern crate libc;
@@ -19,7 +19,7 @@ use nodes::Node;
 
 fn main() {
     let mut ahrs = nodes::ahrs::Ahrs::new();
-    let mut server = nodes::server::Server::new();
+    let server = nodes::server::Server::new();
     let mut sysinfo = nodes::sysinfo::SysInformer::new();
     let mut video = nodes::video::Video::new();
 

@@ -18,7 +18,7 @@ impl SysInformer {
     fn get_loadavg(&self) -> (u8, u8, u8) {
         let content = self.read_file("/proc/loadavg");
 
-        let mut split = content.split(' ');
+        let mut split = content.split_whitespace();
         let one = split.next().unwrap().parse::<f32>().unwrap() * 100.;
         let five = split.next().unwrap().parse::<f32>().unwrap() * 100.;
         let fifteen = split.next().unwrap().parse::<f32>().unwrap() * 100.;
@@ -29,17 +29,17 @@ impl SysInformer {
     fn get_mem(&mut self) -> (u8, u8) {
         let content = self.read_file("/proc/meminfo");
 
-        let mut words = content.words();
+        let mut split = content.split_whitespace();
 
         if self.total_mem == 0 {
-            self.total_mem = words.nth(1).unwrap().parse().unwrap();
+            self.total_mem = split.nth(1).unwrap().parse().unwrap();
         } else {
-            words.nth(1);
+            split.nth(1);
         }
 
-        let free: u32 = words.nth(2).unwrap().parse().unwrap();
+        let free: u32 = split.nth(2).unwrap().parse().unwrap();
         // Kernel 3.14+.
-        let avail: u32 = words.nth(2).unwrap().parse().unwrap();
+        let avail: u32 = split.nth(2).unwrap().parse().unwrap();
 
         ((free * 255 / self.total_mem) as u8, (avail * 255 / self.total_mem) as u8)
     }
@@ -47,19 +47,19 @@ impl SysInformer {
     fn get_cpu(&mut self) -> u8 {
         let content = self.read_file("/proc/stat");
 
-        let mut words = content.words();
+        let mut split = content.split_whitespace();
         let (mut total, mut idle) = (0u32, 0u32);
 
-        total += words.nth(1).unwrap().parse::<u32>().unwrap()     // user
-               + words.next().unwrap().parse::<u32>().unwrap()     // nice
-               + words.next().unwrap().parse::<u32>().unwrap();    // system
+        total += split.nth(1).unwrap().parse::<u32>().unwrap()      // user
+               + split.next().unwrap().parse::<u32>().unwrap()      // nice
+               + split.next().unwrap().parse::<u32>().unwrap();     // system
 
-        idle += words.next().unwrap().parse::<u32>().unwrap()      // idle
-              + words.next().unwrap().parse::<u32>().unwrap();     // iowait
+        idle += split.next().unwrap().parse::<u32>().unwrap()       // idle
+              + split.next().unwrap().parse::<u32>().unwrap();      // iowait
 
-        total += words.next().unwrap().parse::<u32>().unwrap()     // irq
-               + words.next().unwrap().parse::<u32>().unwrap()     // softirq
-               + words.next().unwrap().parse::<u32>().unwrap()     // steal
+        total += split.next().unwrap().parse::<u32>().unwrap()      // irq
+               + split.next().unwrap().parse::<u32>().unwrap()      // softirq
+               + split.next().unwrap().parse::<u32>().unwrap()      // steal
                + idle;
 
         let d_idle = idle - self.prev_idle;

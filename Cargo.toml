@@ -6,6 +6,7 @@ authors = ["Paul Loyd <pavelko95@gmail.com>"]
 [dependencies]
 byteorder = "*"
 httparse = "*"
+libc = "*"
 rustc-serialize = "*"
 sha1 = "*"
 
