@@ -1,36 +1,54 @@
-TARGET := target/arm-unknown-linux-gnueabihf/debug/rusty
-CARGO := pi cargo
+-include config.mk
 
-# TARGET := target/debug/rusty
-# CARGO := cargo
+TARGET ?=
+RUST ?=
+LINKER ?=
 
-BROWSERIFY := ./node_modules/.bin/browserify -d
+RHOST ?=
+RPATH ?=
 
-RHOST := raspi@rusty
-RPATH := /home/rusty
+
+export PATH := ./node_modules/.bin:$(PATH)
+
+ifneq ($(RUST),)
+	export LD_LIBRARY_PATH := $(RUST)/lib:$(LD_LIBRARY_PATH)
+	export PATH := $(RUST)/bin:$(PATH)
+endif
+ifneq ($(TARGET),)
+	CARGOFLAGS += --target=$(TARGET)
+endif
+ifneq ($(LINKER),)
+	RUSTCFLAGS += -C linker="$(LINKER)"
+endif
 
 build: build/rusty build/index.html build/bundle.js
 
 .PHONY: build/rusty
 build/rusty: | mk-build
-	$(CARGO) build
-	cp $(TARGET) $@
+	cargo rustc $(CARGOFLAGS) -- $(RUSTCFLAGS)
+	cp target/$(TARGET)/debug/rusty $@
 
 build/index.html: web/index.html | mk-build
 	cp $< $@
 
-build/bundle.js: $(shell $(BROWSERIFY) --list web/index.js || echo '_') | mk-build
-	$(BROWSERIFY) web/index.js -o $@
+build/bundle.js: web/*.js | mk-build
+	browserify web/index.js -o $@
 
 mk-build:
 	mkdir -p build
 
 deploy: build
-	scp build/* $(RHOST):$(RPATH)
+	rsync -vrE --delete --progress build/ $(RHOST):$(RPATH)
 
 remrun: deploy
 	ssh -t $(RHOST) 'cd $(RPATH) && ./rusty'
 
+.PHONY: update
+update: clean
+	cargo update
+	npm update
+
+.PHONY: clean
 clean:
 	rm -rf build
 	cargo clean
