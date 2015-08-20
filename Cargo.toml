@@ -7,6 +7,7 @@ authors = ["Paul Loyd <pavelko95@gmail.com>"]
 byteorder = "*"
 httparse = "*"
 libc = "*"
+log = "*"
 rustc-serialize = "*"
 sha1 = "*"
 
