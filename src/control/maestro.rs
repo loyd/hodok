@@ -1,6 +1,6 @@
 use std::io::Result;
 
-use ifaces::Serial;
+use super::serial::Serial;
 
 
 pub struct Maestro(Serial);

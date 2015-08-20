@@ -7,28 +7,26 @@ extern crate rscam;
 extern crate rustc_serialize;
 extern crate sha1;
 
-mod math;
-mod ifaces;
-mod periphery;
+// Utils.
 mod constants;
 mod messages;
-mod nodes;
+mod node;
 
-use nodes::Node;
+// Nodes.
+mod ahrs;
+mod control;
+mod server;
+mod sysinfo;
+mod video;
 
+
+static NODES: &'static [fn()] = &[
+    ahrs::worker,
+    server::worker,
+    sysinfo::worker,
+    video::worker,
+];
 
 fn main() {
-    let mut ahrs = nodes::ahrs::Ahrs::new();
-    let server = nodes::server::Server::new();
-    let mut sysinfo = nodes::sysinfo::SysInformer::new();
-    let mut video = nodes::video::Video::new();
-
-    ahrs.attitude.pipe(&server.attitude);
-    video.video_frame.pipe(&server.video_frame);
-    sysinfo.info.pipe(&server.sysinfo);
-
-    ahrs.start();
-    server.start();
-    sysinfo.start();
-    video.start().join();
+    node::run(&NODES);
 }

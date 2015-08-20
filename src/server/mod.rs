@@ -13,16 +13,10 @@ use httparse;
 use rustc_serialize::base64::{self, ToBase64};
 use sha1::Sha1;
 
-use constants;
+use constants::PORT;
 use messages::{Attitude, VideoFrame, SysInfo};
-use nodes::{Node, Input};
+use node;
 
-
-pub struct Server {
-    pub video_frame: Input<VideoFrame>,
-    pub attitude: Input<Attitude>,
-    pub sysinfo: Input<SysInfo>
-}
 
 struct Handler {
     video: Option<TcpStream>,
@@ -179,41 +173,31 @@ impl Handler {
     }
 }
 
-impl Node for Server {
-    fn new() -> Server {
-        Server {
-            video_frame: Input::new(),
-            attitude: Input::new(),
-            sysinfo: Input::new()
+pub fn worker() {
+    let video_frame_rx = node::subscribe::<VideoFrame>();
+    let attitude_rx = node::subscribe::<Attitude>();
+    let sys_info_rx = node::subscribe::<SysInfo>();
+
+    println!("====================");
+
+    let mut hander = Handler { video: None, attitude: None, sysinfo: None };
+
+    let (tcp_tx, tcp_rx) = mpsc::channel();
+    thread::spawn(move || {
+        let addr = ("0.0.0.0", PORT);
+        let listener = TcpListener::bind(addr).unwrap();
+
+        for stream in listener.incoming() {
+            tcp_tx.send(stream.unwrap()).unwrap();
         }
-    }
+    });
 
-    fn main(&mut self) {
-        println!("====================");
-
-        let mut spriv = Handler { video: None, attitude: None, sysinfo: None };
-
-        let (tx_tcp, rx_tcp) = mpsc::channel();
-        thread::spawn(move || {
-            let addr = ("0.0.0.0", constants::PORT);
-            let listener = TcpListener::bind(addr).unwrap();
-
-            for stream in listener.incoming() {
-                tx_tcp.send(stream.unwrap()).unwrap();
-            }
-        });
-
-        let rx_vid = &self.video_frame.1;
-        let rx_att = &self.attitude.1;
-        let rx_sys = &self.sysinfo.1;
-
-        loop {
-            select! {
-                stream = rx_tcp.recv() => spriv.handle(stream.unwrap()),
-                frame = rx_vid.recv() => spriv.send_video_frame(&*frame.unwrap()),
-                attitude = rx_att.recv() => spriv.send_attitude(&*attitude.unwrap()),
-                sysinfo = rx_sys.recv() => spriv.send_sysinfo(&*sysinfo.unwrap())
-            }
+    loop {
+        select! {
+            stream = tcp_rx.recv() => hander.handle(stream.unwrap()),
+            frame = video_frame_rx.recv() => hander.send_video_frame(&*frame.unwrap()),
+            attitude = attitude_rx.recv() => hander.send_attitude(&*attitude.unwrap()),
+            sysinfo = sys_info_rx.recv() => hander.send_sysinfo(&*sysinfo.unwrap())
         }
     }
 }

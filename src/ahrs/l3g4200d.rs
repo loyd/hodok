@@ -2,7 +2,7 @@ use std::convert::From;
 use std::io;
 use std::result;
 
-use ifaces::I2C;
+use super::i2c::I2C;
 
 
 pub type Result<T> = result::Result<T, Error>;

@@ -1,14 +1,12 @@
 use std::fs::File;
 use std::io::Read;
 
-use constants;
+use constants::SYSINFO_RATE;
 use messages::SysInfo;
-use nodes::{Node, Output, timer};
+use node;
 
 
 pub struct SysInformer {
-    pub info: Output<SysInfo>,
-
     total_mem: u32,
     prev_idle: u32,
     prev_total: u32
@@ -85,32 +83,23 @@ impl SysInformer {
     }
 }
 
-impl Node for SysInformer {
-    fn new() -> SysInformer {
-        SysInformer {
-            info: Output::new(),
-            total_mem: 0,
-            prev_idle: 0,
-            prev_total: 0
-        }
-    }
+pub fn worker() {
+    let sys_info_tx = node::advertise::<SysInfo>();
 
-    fn main(&mut self) {
-        let rate = constants::SYSINFO_RATE;
+    let mut informer = SysInformer { total_mem: 0, prev_idle: 0, prev_total: 0 };
 
-        for _ in timer(rate).iter() {
-            let (free_mem, avail_mem) = self.get_mem();
-            let cpu = self.get_cpu();
-            let loadavg = self.get_loadavg();
-            let temp = self.get_temp();
+    for _ in node::periodic(SYSINFO_RATE) {
+        let (free_mem, avail_mem) = informer.get_mem();
+        let cpu = informer.get_cpu();
+        let loadavg = informer.get_loadavg();
+        let temp = informer.get_temp();
 
-            self.info.send(SysInfo {
-                free_mem: free_mem,
-                avail_mem: avail_mem,
-                cpu: cpu,
-                loadavg: loadavg,
-                temp: temp
-            });
-        }
+        sys_info_tx.send(SysInfo {
+            free_mem: free_mem,
+            avail_mem: avail_mem,
+            cpu: cpu,
+            loadavg: loadavg,
+            temp: temp
+        });
     }
 }
