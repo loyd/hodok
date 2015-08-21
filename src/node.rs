@@ -12,7 +12,7 @@ pub fn run(workers: &'static [fn()]) {
         thread::spawn(worker);
     }
 
-    let (_, rx) = mpsc::channel::<()>();
+    let (_tx, rx) = mpsc::channel::<()>();
     rx.recv().unwrap();
 }
 
