@@ -7,13 +7,23 @@ use std::sync::{Once, ONCE_INIT};
 use std::thread;
 
 
-pub fn run(workers: &'static [fn()]) {
-    for worker in workers {
-        thread::spawn(worker);
-    }
+pub const STACK_SIZE: usize = 64 * 1024;
 
-    let (_tx, rx) = mpsc::channel::<()>();
-    rx.recv().unwrap();
+macro_rules! run_nodes {
+    ($node:ident $($nodes:ident)*) => {
+        mod $node;
+        let _ = ::std::thread::Builder::new()
+            .name(stringify!($node).to_string())
+            .stack_size(::node::STACK_SIZE)
+            .spawn($node::worker).unwrap();
+        info!("Starting {}...", stringify!($node));
+        run_nodes!($($nodes)*);
+    };
+
+    () => ({
+        let (_tx, rx) = ::std::sync::mpsc::channel::<()>();
+        rx.recv().unwrap();
+    });
 }
 
 pub type Input<I> = Receiver<Arc<I>>;
