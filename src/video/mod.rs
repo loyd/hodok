@@ -1,19 +1,24 @@
 use std::default::Default;
 
 use rscam::{Camera, Config};
+use rscam::{CID_MPEG_VIDEO_H264_PROFILE, MPEG_VIDEO_H264_PROFILE_BASELINE};
+use rscam::{CID_MPEG_VIDEO_H264_I_PERIOD, CID_MPEG_VIDEO_REPEAT_SEQ_HEADER, CID_HFLIP, CID_VFLIP};
 
-use constants::{VIDEO_DEVICE, VIDEO_FPS, VIDEO_RESOLUTION};
+use constants::{VIDEO_DEVICE, VIDEO_FPS, VIDEO_RESOLUTION, VIDEO_GOF_SIZE};
 use messages::VideoFrame;
 use node;
 
 
 pub fn worker() {
-    let video_frame_tx = node::advertise::<VideoFrame>();
+    let video = node::advertise::<VideoFrame>();
 
     let mut camera = Camera::new(VIDEO_DEVICE).unwrap();
 
-    ::std::thread::sleep_ms(10_000);
-    println!(">>>> video start");
+    camera.set_control(CID_MPEG_VIDEO_H264_PROFILE, MPEG_VIDEO_H264_PROFILE_BASELINE).unwrap();
+    camera.set_control(CID_MPEG_VIDEO_H264_I_PERIOD, VIDEO_GOF_SIZE).unwrap();
+    camera.set_control(CID_MPEG_VIDEO_REPEAT_SEQ_HEADER, true).unwrap();
+    camera.set_control(CID_HFLIP, true).unwrap();
+    camera.set_control(CID_VFLIP, true).unwrap();
 
     camera.start(&Config {
         interval: (1, VIDEO_FPS),
@@ -24,6 +29,6 @@ pub fn worker() {
 
     loop {
         let frame = camera.capture().unwrap();
-        video_frame_tx.send(frame);
+        video.send(frame);
     }
 }
