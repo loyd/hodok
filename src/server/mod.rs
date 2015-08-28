@@ -178,8 +178,6 @@ pub fn worker() {
     let attitude_rx = node::subscribe::<Attitude>();
     let sys_info_rx = node::subscribe::<SysInfo>();
 
-    println!("====================");
-
     let mut hander = Handler { video: None, attitude: None, sysinfo: None };
 
     let (tcp_tx, tcp_rx) = mpsc::channel();
