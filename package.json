@@ -1,17 +1,21 @@
 {
     "dependencies": {
         "domready": "^1.0.7",
+        "riot": "^2.2.4",
         "smoothie": "^1.27.0"
     },
 
     "devDependencies": {
+        "babel": "^5.8.21",
         "babelify": "^6.0.1",
-        "browserify": "^9.0.7"
+        "browserify": "^9.0.7",
+        "riotify": "^0.1.2"
     },
 
     "browserify": {
         "transform": [
-            ["babelify", {"loose": "all"}]
+            ["babelify", {"loose": "all"}],
+            ["riotify", {"type": "es6", "ext": "html"}]
         ]
     }
 }

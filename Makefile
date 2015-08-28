@@ -21,34 +21,33 @@ ifneq ($(LINKER),)
 	RUSTCFLAGS += -C linker="$(LINKER)"
 endif
 
-build: build/rusty build/index.html build/bundle.js
+all: build/rusty build/index.html build/bundle.js
 
-.PHONY: build/rusty
-build/rusty: | mk-build
+build/rusty: src/*.rs src/*/*.rs config.mk | build
 	cargo rustc $(CARGOFLAGS) -- $(RUSTCFLAGS)
 	cp target/$(TARGET)/debug/rusty $@
 
-build/index.html: web/index.html | mk-build
+build/index.html: web/index.html | build
 	cp $< $@
 
-build/bundle.js: web/*.js | mk-build
+build/bundle.js: web/*.js web/tags/* | build
 	browserify web/index.js -o $@
 
-mk-build:
-	mkdir -p build
+build:
+	mkdir -p $@
 
-deploy: build
+.PHONY: deploy remrun update clean
+
+deploy: all
 	rsync -vrE --delete --progress build/ $(RHOST):$(RPATH)
 
 remrun: deploy
 	ssh -t $(RHOST) 'cd $(RPATH) && ./rusty'
 
-.PHONY: update
 update: clean
 	cargo update
 	npm update
 
-.PHONY: clean
 clean:
 	rm -rf build
 	cargo clean
