@@ -1,0 +1,225 @@
+<informer>
+    <section>
+        <h1>CPU</h1>
+        <div>Temp: <b>{temp}°C</b></div>
+        <div>Load: <b>{load[0]} {load[1]} {load[2]}</b></div>
+        <div>Usage: <b>{Math.round(cpu)}%</b> <gauge value={cpu} /></div>
+        <graph min=0 max=100 value={cpu} />
+    </section>
+    <section>
+        <h1>Memory</h1>
+        <div>Usage: <b>{Math.round(mem)}%</b> + <b>{Math.round(reserved)}%</b>
+            <gauge value={mem} /></div>
+    </section>
+    <section>
+        <h1>Playload</h1>
+        <div class="playload-down">
+            <div>Down: <b>{Math.round(down/1024)}KiB/s</b></div>
+            <div>Total: <b>{Math.round(totalDown/1024/1024)}MiB</b></div>
+            <graph min=0 labels value={Math.round(down/1024)} />
+        </div>
+        <div class="playload-up">
+            <div>Up: <b>{Math.round(up/1024)}KiB/s</b></div>
+            <div>Total: <b>{Math.round(totalUp/1024/1024)}KiB</b></div>
+            <graph min=0 labels value={Math.round(up/1024)} />
+        </div>
+    </section>
+
+    <style scoped>
+    section {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    h1 {
+        color: orange;
+        display: flex;
+        flex-direction: row;
+        margin-bottom: 4px;
+    }
+
+    h1:after {
+        background-color: orange;
+        margin-left: 10px;
+        content: "";
+        flex-grow: 1;
+        height: 1px;
+        position: relative;
+        top: 0.5em;
+    }
+
+    .playload-down {
+        width: 49%;
+        float: left;
+    }
+
+    .playload-up {
+        width: 49%;
+        float: right;
+    }
+
+    gauge {
+        float: right;
+        width: 35%;
+        height: 1em;
+    }
+
+    graph {
+        margin-top: 5px;
+        width: 100%;
+        height: 25px;
+    }
+    </style>
+
+    <script>
+    import Channel from '../channel';
+
+
+    // CPU and memory.
+    let sysinfo = new Channel('sysinfo');
+    sysinfo.on('data', data => {
+        let info = parse(data);
+
+        this.temp = info.temp;
+        this.load = info.loadavg;
+        this.cpu = info.cpu * 100;
+        this.mem = (1 - info.availMem) * 100;
+        this.reserved = (info.availMem - info.freeMem) * 100;
+
+        this.update();
+    });
+
+    function parse(raw) {
+        let dv = new DataView(raw);
+
+        return {
+            freeMem: dv.getUint8(0) / 255,
+            availMem: dv.getUint8(1) / 255,
+            cpu: dv.getUint8(2) / 255,
+            loadavg: [dv.getUint8(3) / 100, dv.getUint8(4) / 100, dv.getUint8(5) / 100],
+            temp: dv.getInt8(6)
+        };
+    }
+
+    // Playload.
+    this.totalDown = this.totalUp = 0;
+    let down = this.down = this.up =  0;
+    setInterval(() => {
+        this.down = down;
+        this.totalDown += down;
+        down = 0;
+    }, 1000);
+
+    let video = new Channel('video');
+    video.on('data', data => down += data.byteLength);
+    sysinfo.on('data', data => down += data.byteLength);
+    </script>
+</informer>
+
+<gauge>
+    <div class="progress" style="
+        width: {width(opts.value)}%;
+        background-color: {color(opts.value)};
+    "></div>
+
+    <style scoped>
+    :scope {
+        display: inline-block;
+        border: 1px solid orange;
+    }
+
+    .progress {
+        height: 100%;
+        background-color: blue;
+    }
+
+    :scope, .progress {
+        border-radius: 2px;
+    }
+    </style>
+
+    <script>
+    const pallete = [[87, 87, 87], [0, 255, 0], [0, 0, 255], [255, 0, 0]];
+
+    this.width = value => Math.max(Math.min(value, 100), 0);
+
+    this.color = value => {
+        if (value <= 0)
+            return `rgb(${pallete[0][0]}, ${pallete[0][1]}, ${pallete[0][2]})`;
+
+        if (value >= 100) {
+            let color = pallete[pallete.length-1];
+            return `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+        }
+
+        let i = value/100 * (pallete.length-1);
+        let t = i - (i|0);
+
+        let [from, to] = [pallete[i|0], pallete[i+1|0]];
+
+        let [r, g, b] = [
+            from[0] + (to[0] - from[0])*t|0,
+            from[1] + (to[1] - from[1])*t|0,
+            from[2] + (to[2] - from[2])*t|0
+        ];
+
+        return `rgb(${r}, ${g}, ${b})`;
+    };
+    </script>
+</gauge>
+
+<graph>
+    <canvas width={width} height={height}></canvas>
+
+    <style scoped>
+    :scope {
+        display: block;
+    }
+
+    canvas {
+        width: 100%;
+        height: 100%;
+    }
+    </style>
+
+    <script>
+    import smoothie from 'smoothie';
+
+
+    let series = new smoothie.TimeSeries;
+
+    let config = {
+        millisPerPixel: 300,
+        grid: {
+            millisPerLine: 5000,
+            strokeStyle: '#555555',
+            sharpLines: true,
+            verticalSections: 1
+        },
+        labels: 'labels' in opts ? { precision: 0 } : { disabled: true }
+    };
+
+    if (opts.min)
+        config.minValue = opts.min;
+
+    if (opts.max)
+        config.maxValue = opts.max;
+
+    let chart = new smoothie.SmoothieChart(config);
+
+    chart.addTimeSeries(series, {
+        strokeStyle: '#ffff00',
+        fillStyle: 'rgba(255, 255, 0, .2)',
+        lineWidth: 1
+    });
+
+    this.on('mount', () => {
+        let canvas = this.root.querySelector('canvas');
+        this.width = canvas.clientWidth;
+        this.height = canvas.clientHeight;
+        chart.streamTo(canvas, 1000);
+    });
+
+    this.on('update', () => series.append(Date.now(), opts.value));
+    </script>
+</graph>
