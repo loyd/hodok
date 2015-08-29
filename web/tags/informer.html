@@ -24,11 +24,16 @@
             <graph min=0 labels={formatSizeSpeed} value={up} />
         </div>
     </section>
+    <section>
+        <h1>Compass</h1>
+        <img src="assets/compass.png" width="100%" style="transform: rotate({-yaw}rad)"/>
+    </section>
 
     <style scoped>
     section {
         padding-left: 10px;
         padding-right: 10px;
+        overflow: hidden;
     }
 
     h1 {
@@ -78,7 +83,7 @@
     // CPU and memory.
     let sysinfo = new Channel('sysinfo');
     sysinfo.on('data', data => {
-        let info = parse(data);
+        let info = parseSysInfo(data);
 
         this.temp = info.temp;
         this.load = info.loadavg;
@@ -89,7 +94,7 @@
         this.update();
     });
 
-    function parse(raw) {
+    function parseSysInfo(raw) {
         let dv = new DataView(raw);
 
         return {
@@ -98,6 +103,38 @@
             cpu: dv.getUint8(2) / 255,
             loadavg: [dv.getUint8(3) / 100, dv.getUint8(4) / 100, dv.getUint8(5) / 100],
             temp: dv.getInt8(6)
+        };
+    }
+
+
+    // Attitude.
+    this.yaw = 0;
+
+    let attitude = new Channel('attitude');
+    attitude.on('data', data => {
+        let attitude = parseAttitude(data);
+        let angles = quaternionToEuler(attitude);
+
+        // Temporary hack: why does zero yaw point to the East?
+        this.yaw = angles.yaw - Math.PI/2;
+    });
+
+    function parseAttitude(raw) {
+        let dv = new DataView(raw);
+
+        let w = dv.getFloat32(0, true);
+        let x = dv.getFloat32(4, true);
+        let y = dv.getFloat32(8, true);
+        let z = dv.getFloat32(12, true);
+
+        return [w, x, y, z];
+    }
+
+    function quaternionToEuler([w, x, y, z]) {
+        return {
+            pitch: -Math.asin(2*(x*z + w*y)),
+            roll: Math.atan2(2*(y*z - w*x), 2*(w*w + z*z) - 1),
+            yaw: Math.atan2(2*(x*y - w*z), 2*(w*w + x*x) - 1),
         };
     }
 
@@ -111,8 +148,9 @@
     }, 1000);
 
     let video = new Channel('video');
-    video.on('data', data => down += data.byteLength);
+    attitude.on('data', data => down += data.byteLength);
     sysinfo.on('data', data => down += data.byteLength);
+    video.on('data', data => down += data.byteLength);
 
     function formatSize(size) {
         const prefix = 'KMGT';
