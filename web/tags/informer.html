@@ -3,25 +3,25 @@
         <h1>CPU</h1>
         <div>Temp: <b>{temp}°C</b></div>
         <div>Load: <b>{load[0]} {load[1]} {load[2]}</b></div>
-        <div>Usage: <b>{Math.round(cpu)}%</b> <gauge value={cpu} /></div>
+        <div>Usage: <b>{cpu.toFixed()}%</b> <gauge value={cpu} /></div>
         <graph min=0 max=100 value={cpu} />
     </section>
     <section>
         <h1>Memory</h1>
-        <div>Usage: <b>{Math.round(mem)}%</b> + <b>{Math.round(reserved)}%</b>
+        <div>Usage: <b>{mem.toFixed()}%</b> + <b>{reserved.toFixed()}%</b>
             <gauge value={mem} /></div>
     </section>
     <section>
         <h1>Playload</h1>
         <div class="playload-down">
-            <div>Down: <b>{Math.round(down/1024)}KiB/s</b></div>
-            <div>Total: <b>{Math.round(totalDown/1024/1024)}MiB</b></div>
-            <graph min=0 labels value={Math.round(down/1024)} />
+            <div>Down: <b>{formatSizeSpeed(down)}</b></div>
+            <div>Total: <b>{formatSize(totalDown)}</b></div>
+            <graph min=0 labels={formatSizeSpeed} value={down} />
         </div>
         <div class="playload-up">
-            <div>Up: <b>{Math.round(up/1024)}KiB/s</b></div>
-            <div>Total: <b>{Math.round(totalUp/1024/1024)}KiB</b></div>
-            <graph min=0 labels value={Math.round(up/1024)} />
+            <div>Up: <b>{formatSizeSpeed(up)}</b></div>
+            <div>Total: <b>{formatSize(totalUp)}</b></div>
+            <graph min=0 labels={formatSizeSpeed} value={up} />
         </div>
     </section>
 
@@ -113,6 +113,20 @@
     let video = new Channel('video');
     video.on('data', data => down += data.byteLength);
     sysinfo.on('data', data => down += data.byteLength);
+
+    function formatSize(size) {
+        const prefix = 'KMGT';
+        if (size < 1024) return `${size}B`;
+
+        for (let i = 0;; ++i) {
+            size /= 1024;
+            if (size < 9.5) return `${size.toFixed(1)}${prefix[i]}iB`;
+            if (size < 1023.5) return `${size.toFixed()}${prefix[i]}iB`;
+        }
+    }
+
+    this.formatSize = formatSize;
+    this.formatSizeSpeed = size => `${formatSize(size)}/s`;
     </script>
 </informer>
 
@@ -204,6 +218,9 @@
 
     if (opts.max)
         config.maxValue = opts.max;
+
+    if (typeof opts.labels === 'function')
+        config.yMinFormatter = config.yMaxFormatter = opts.labels;
 
     let chart = new smoothie.SmoothieChart(config);
 
