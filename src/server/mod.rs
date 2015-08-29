@@ -18,6 +18,15 @@ use messages::{Attitude, VideoFrame, SysInfo};
 use node;
 
 
+fn get_mime(ext: &str) -> &'static str {
+    match ext {
+        "html" => "text/html",
+        "js" => "application/javascript",
+        "png" => "mage/png",
+        _ => ""
+    }
+}
+
 struct Handler {
     video: Option<TcpStream>,
     attitude: Option<TcpStream>,
@@ -29,9 +38,9 @@ impl Handler {
         let (path, headers) = self.parse_req(&mut stream);
 
         if headers.contains_key("Upgrade") {
-            self.handle_ws(stream, &path, &headers.get("Sec-WebSocket-Key").unwrap());
+            self.handle_ws(stream, &path[1..], &headers.get("Sec-WebSocket-Key").unwrap());
         } else {
-            self.handle_http(stream, &path);
+            self.handle_http(stream, &path[1..]);
         }
     }
 
@@ -55,30 +64,33 @@ impl Handler {
         (path, headers)
     }
 
-    fn handle_http(&self, stream: TcpStream, path: &str) {
-        match path {
-            "/" | "/index.html" => self.send_file(stream, "index.html"),
-            "/bundle.js" => self.send_file(stream, "bundle.js"),
-            _ => self.send_404(stream)
+    fn handle_http(&self, mut stream: TcpStream, mut path: &str) {
+        if path == "" {
+            path = "index.html";
         }
-    }
 
-    fn send_file(&self, mut stream: TcpStream, path: &str) {
-        let mut res = String::new();
-        let mut file = File::open(path).unwrap();
-        let ext = Path::new(path).extension().and_then(|x| x.to_str());
+        let mut file = match File::open(path) {
+            Ok(f) => f,
+            Err(_) => {
+                self.send_404(stream);
+                return;
+            }
+        };
 
-        res.push_str("HTTP/1.1 200 OK\r\nContent-Type: ");
-        res.push_str(match ext {
-            Some("html") => "text/html",
-            Some("js") => "application/javascript",
-            _ => ""
-        });
-        res.push_str("; charset=utf-8\r\n\r\n");
-        file.read_to_string(&mut res).unwrap();
-        res.push_str("\r\n");
+        let ext = Path::new(path).extension().and_then(|x| x.to_str()).unwrap_or("");
 
-        stream.write(res.as_bytes()).unwrap();
+        let mut header = String::new();
+        header.push_str("HTTP/1.1 200 OK\r\nContent-Type: ");
+        header.push_str(get_mime(ext));
+        header.push_str("\r\n\r\n");
+
+        let mut data = Vec::new();
+        file.read_to_end(&mut data).unwrap();
+
+        stream.write_all(header.as_bytes()).unwrap();
+        stream.write_all(&data).unwrap();
+
+        stream.write(b"\r\n\r\n").unwrap();
     }
 
     fn send_404(&self, mut stream: TcpStream) {
@@ -95,9 +107,9 @@ impl Handler {
         stream.write(b"\r\n\r\n").unwrap();
 
         match path {
-            "/video" => self.video = Some(stream),
-            "/attitude" => self.attitude = Some(stream),
-            "/sysinfo" => self.sysinfo = Some(stream),
+            "video" => self.video = Some(stream),
+            "attitude" => self.attitude = Some(stream),
+            "sysinfo" => self.sysinfo = Some(stream),
             _ => {}
         }
     }

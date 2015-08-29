@@ -21,7 +21,7 @@ ifneq ($(LINKER),)
 	RUSTCFLAGS += -C linker="$(LINKER)"
 endif
 
-all: build/rusty build/index.html build/bundle.js
+all: build/rusty build/index.html build/bundle.js build/assets
 
 build/rusty: src/*.rs src/*/*.rs config.mk | build
 	cargo rustc $(CARGOFLAGS) -- $(RUSTCFLAGS)
@@ -32,6 +32,10 @@ build/index.html: web/index.html | build
 
 build/bundle.js: web/*.js web/tags/* | build
 	browserify web/index.js -o $@
+
+build/assets: web/assets/*
+	mkdir -p $@
+	cp $^ $@
 
 build:
 	mkdir -p $@
