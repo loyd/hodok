@@ -28,6 +28,24 @@
         <h1>Compass</h1>
         <img src="assets/compass.png" width="100%" style="transform: rotate({-yaw}rad)"/>
     </section>
+    <section>
+        <h1>Horizon</h1>
+        <div>
+            Pitch: <b>{(pitch*180/Math.PI).toFixed()}°</b>,
+            roll: <b>{(roll*180/Math.PI).toFixed()}°</b>,
+            yaw: <b>{(yaw*180/Math.PI).toFixed()}°</b>
+        </div>
+        <div class="indicator">
+            <div class="box" style="transform: rotate({roll}rad)">
+                <img class="box" src="assets/horizon_back.svg" />
+                <img class="box" src="assets/horizon_ball.svg"
+                     style="top: {Math.max(Math.min(pitch*180/Math.PI, 30), -30)*.7}%" />
+                <img class="box" src="assets/horizon_circle.svg" />
+            </div>
+            <img class="box" src="assets/horizon_mechanics.svg" />
+            <img class="box" src="assets/fi_circle.svg" />
+        </div>
+    </section>
 
     <style scoped>
     section {
@@ -61,6 +79,28 @@
     .playload-up {
         width: 49%;
         float: right;
+    }
+
+    .indicator {
+        position: relative;
+        display: inline-block;
+        overflow: hidden;
+        width: 100%;
+    }
+
+    /* Aspect ratio of 1:1. */
+    .indicator:before {
+        content: "",
+        display: block;
+        padding-top: 100%;
+    }
+
+    .indicator .box {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
     }
 
     gauge {
@@ -108,6 +148,8 @@
 
 
     // Attitude.
+    this.pitch = 0;
+    this.roll = 0;
     this.yaw = 0;
 
     let attitude = new Channel('attitude');
@@ -115,8 +157,12 @@
         let attitude = parseAttitude(data);
         let angles = quaternionToEuler(attitude);
 
+        this.pitch = angles.pitch;
+        this.roll = angles.roll;
         // Temporary hack: why does zero yaw point to the East?
         this.yaw = angles.yaw - Math.PI/2;
+
+        this.update();
     });
 
     function parseAttitude(raw) {
@@ -137,6 +183,7 @@
             yaw: Math.atan2(2*(x*y - w*z), 2*(w*w + x*x) - 1),
         };
     }
+
 
     // Playload.
     this.totalDown = this.totalUp = 0;
