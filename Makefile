@@ -35,6 +35,7 @@ build/bundle.js: web/*.js web/tags/* | build
 
 build/assets: web/assets/*
 	mkdir -p $@
+	touch $@
 	cp $^ $@
 
 build:
