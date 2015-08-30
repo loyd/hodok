@@ -13,27 +13,21 @@
     </section>
     <section>
         <h1>Playload</h1>
-        <div class="playload-down">
+        <div class="left-half">
             <div>Down: <b>{formatSizeSpeed(down)}</b></div>
             <div>Total: <b>{formatSize(totalDown)}</b></div>
             <graph min=0 labels={formatSizeSpeed} value={down} />
         </div>
-        <div class="playload-up">
+        <div class="right-half">
             <div>Up: <b>{formatSizeSpeed(up)}</b></div>
             <div>Total: <b>{formatSize(totalUp)}</b></div>
             <graph min=0 labels={formatSizeSpeed} value={up} />
         </div>
     </section>
     <section>
-        <h1>Compass</h1>
-        <img src="assets/compass.png" width="100%" style="transform: rotate({-yaw}rad)"/>
-    </section>
-    <section>
         <h1>Horizon</h1>
-        <div>
-            Pitch: <b>{(pitch*180/Math.PI).toFixed()}°</b>,
-            roll: <b>{(roll*180/Math.PI).toFixed()}°</b>,
-            yaw: <b>{(yaw*180/Math.PI).toFixed()}°</b>
+        <div class="left-half">Pitch: <b>{(pitch*180/Math.PI).toFixed()}°</b></div>
+        <div class="right-half">Roll: <b>{(roll*180/Math.PI).toFixed()}°</b></div>
         </div>
         <div class="indicator">
             <div class="box" style="transform: rotate({roll}rad)">
@@ -43,6 +37,15 @@
                 <img class="box" src="assets/horizon_circle.svg" />
             </div>
             <img class="box" src="assets/horizon_mechanics.svg" />
+            <img class="box" src="assets/fi_circle.svg" />
+        </div>
+    </section>
+    <section>
+        <h1>Heading</h1>
+        <div>Yaw: <b>{(yaw*180/Math.PI).toFixed()}°</b></div>
+        <div class="indicator">
+            <img class="box" style="transform: rotate({-yaw}rad)" src="assets/heading_yaw.svg" />
+            <img class="box" src="assets/heading_mechanics.svg" />
             <img class="box" src="assets/fi_circle.svg" />
         </div>
     </section>
@@ -71,14 +74,15 @@
         top: 0.5em;
     }
 
-    .playload-down {
+    .left-half {
         width: 49%;
         float: left;
     }
 
-    .playload-up {
+    .right-half {
         width: 49%;
         float: right;
+        text-align: right;
     }
 
     .indicator {
@@ -86,11 +90,12 @@
         display: inline-block;
         overflow: hidden;
         width: 100%;
+        margin: -15px 0;
     }
 
     /* Aspect ratio of 1:1. */
     .indicator:before {
-        content: "",
+        content: "";
         display: block;
         padding-top: 100%;
     }
