@@ -23,6 +23,7 @@ fn get_mime(ext: &str) -> &'static str {
         "html" => "text/html",
         "js" => "application/javascript",
         "png" => "mage/png",
+        "svg" => "image/svg+xml",
         _ => ""
     }
 }
