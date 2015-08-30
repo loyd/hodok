@@ -26,14 +26,14 @@
     </section>
     <section>
         <h1>Horizon</h1>
-        <div class="left-half">Pitch: <b>{(pitch*180/Math.PI).toFixed()}°</b></div>
-        <div class="right-half">Roll: <b>{(roll*180/Math.PI).toFixed()}°</b></div>
+        <div class="left-half">Pitch: <b>{(pitch*RAD_TO_DEG).toFixed()}°</b></div>
+        <div class="right-half">Roll: <b>{(roll*RAD_TO_DEG).toFixed()}°</b></div>
         </div>
         <div class="indicator">
             <div class="box" style="transform: rotate({roll}rad)">
                 <img class="box" src="assets/horizon_back.svg" />
                 <img class="box" src="assets/horizon_ball.svg"
-                     style="top: {Math.max(Math.min(pitch*180/Math.PI, 30), -30)*.7}%" />
+                     style="top: {Math.max(Math.min(pitch*RAD_TO_DEG, 30), -30)*.7}%" />
                 <img class="box" src="assets/horizon_circle.svg" />
             </div>
             <img class="box" src="assets/horizon_mechanics.svg" />
@@ -42,7 +42,7 @@
     </section>
     <section>
         <h1>Heading</h1>
-        <div>Yaw: <b>{(yaw*180/Math.PI).toFixed()}°</b></div>
+        <div>Yaw: <b>{(yaw*RAD_TO_DEG).toFixed()}°</b></div>
         <div class="indicator">
             <img class="box" style="transform: rotate({-yaw}rad)" src="assets/heading_yaw.svg" />
             <img class="box" src="assets/heading_mechanics.svg" />
@@ -126,6 +126,9 @@
 
 
     // CPU and memory.
+    this.temp = this.cpu = this.mem = this.reserved = 0
+    this.load = [0, 0, 0];
+
     let sysinfo = new Channel('sysinfo');
     sysinfo.on('data', data => {
         let info = parseSysInfo(data);
@@ -156,6 +159,8 @@
     this.pitch = 0;
     this.roll = 0;
     this.yaw = 0;
+
+    this.RAD_TO_DEG = 180/Math.PI;
 
     let attitude = new Channel('attitude');
     attitude.on('data', data => {
@@ -273,7 +278,7 @@
 </gauge>
 
 <graph>
-    <canvas width={width} height={height}></canvas>
+    <canvas></canvas>
 
     <style scoped>
     :scope {
@@ -322,8 +327,8 @@
 
     this.on('mount', () => {
         let canvas = this.root.querySelector('canvas');
-        this.width = canvas.clientWidth;
-        this.height = canvas.clientHeight;
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
         chart.streamTo(canvas, 1000);
     });
 
