@@ -88,6 +88,8 @@ pub fn worker() {
 
     let mut informer = SysInformer { total_mem: 0, prev_idle: 0, prev_total: 0 };
 
+    info!("running at {}Hz", SYSINFO_RATE);
+
     for _ in node::periodic(SYSINFO_RATE) {
         let (free_mem, avail_mem) = informer.get_mem();
         let cpu = informer.get_cpu();

@@ -17,21 +17,29 @@ pub fn worker() {
     let attitude_tx = node::advertise::<Attitude>();
 
     let mut accel = Adxl345::new(AHRS_DEVICE).unwrap();
-    accel.set_rate(AHRS_RATE).unwrap();
-    accel.set_range(ACCEL_RANGE).unwrap();
+    let accel_rate = accel.set_rate(AHRS_RATE).unwrap();
+    let accel_range = accel.set_range(ACCEL_RANGE).unwrap();
+
+    info!("accelerometer: {}Hz, ±{}g", accel_rate, accel_range);
 
     let mut magn = Hmc5883l::new(AHRS_DEVICE).unwrap();
-    magn.set_rate(AHRS_RATE).unwrap();
-    magn.set_range(MAGN_RANGE).unwrap();
+    let magn_rate = magn.set_rate(AHRS_RATE).unwrap();
+    let magn_range = magn.set_range(MAGN_RANGE).unwrap();
+
+    info!("magnetometer: {}Hz, ±{}Gauss", magn_rate, magn_range);
 
     let mut gyro = L3g4200d::new(AHRS_DEVICE).unwrap();
-    gyro.set_rate(AHRS_RATE).unwrap();
-    gyro.set_range(GYRO_RANGE).unwrap();
+    let gyro_rate = gyro.set_rate(AHRS_RATE).unwrap();
+    let gyro_range = gyro.set_range(GYRO_RANGE).unwrap();
+
+    info!("gyroscope: {}Hz, ±{}°/s", gyro_rate, gyro_range);
 
     let mut filter = Madgwick::new();
 
     accel.start().unwrap();
     magn.start().unwrap();
+
+    info!("running at {}Hz", AHRS_RATE);
 
     for _ in node::periodic(AHRS_RATE) {
         let (gx, gy, gz) = gyro.measure().unwrap();

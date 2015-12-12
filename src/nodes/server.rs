@@ -38,6 +38,8 @@ impl Handler {
     fn handle(&mut self, mut stream: TcpStream) {
         let (path, headers) = self.parse_req(&mut stream);
 
+        debug!("handling request {}", path);
+
         if headers.contains_key("Upgrade") {
             self.handle_ws(stream, &path[1..], &headers.get("Sec-WebSocket-Key").unwrap());
         } else {
@@ -98,7 +100,7 @@ impl Handler {
         stream.write(b"HTTP/1.1 404 Not Found\r\n").unwrap();
     }
 
-    fn handle_ws(&mut self, mut stream: TcpStream, path: &str, key: &str) {
+    fn handle_ws(&mut self, mut stream: TcpStream, channel: &str, key: &str) {
         stream.write(b"HTTP/1.1 101 Switching Protocols\r\n\
                        Upgrade: websocket\r\n\
                        Connection: Upgrade\r\n\
@@ -107,7 +109,7 @@ impl Handler {
         stream.write(self.compute_accept(key).as_bytes()).unwrap();
         stream.write(b"\r\n\r\n").unwrap();
 
-        match path {
+        match channel {
             "video" => self.video = Some(stream),
             "attitude" => self.attitude = Some(stream),
             "sysinfo" => self.sysinfo = Some(stream),
@@ -197,6 +199,8 @@ pub fn worker() {
     thread::spawn(move || {
         let addr = ("0.0.0.0", PORT);
         let listener = TcpListener::bind(addr).unwrap();
+
+        info!("listening on {}:{}", addr.0, addr.1);
 
         for stream in listener.incoming() {
             tcp_tx.send(stream.unwrap()).unwrap();

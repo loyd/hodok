@@ -16,7 +16,7 @@ macro_rules! run_nodes {
             .name(stringify!($node).to_string())
             .stack_size(::base::node::STACK_SIZE)
             .spawn(::nodes::$node::worker).unwrap();
-        info!("Starting {}...", stringify!($node));
+        info!("starting {}", stringify!($node));
         run_nodes!($($nodes)*);
     };
 

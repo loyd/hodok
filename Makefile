@@ -23,7 +23,7 @@ endif
 
 all: build/rusty build/index.html build/bundle.js build/assets
 
-build/rusty: src/*.rs src/*/*.rs config.mk | build
+build/rusty: src/*.rs src/*/*.rs src/*/*/*.rs config.mk | build
 	cargo rustc $(CARGOFLAGS) -- $(RUSTCFLAGS)
 	cp target/$(TARGET)/debug/rusty $@
 

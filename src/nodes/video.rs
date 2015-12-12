@@ -27,6 +27,9 @@ pub fn worker() {
         ..Default::default()
     }).unwrap();
 
+    info!("stream: {}x{}, {}fps, GoF = {}", VIDEO_RESOLUTION.0, VIDEO_RESOLUTION.1,
+                                            VIDEO_FPS, VIDEO_GOF_SIZE);
+
     loop {
         let frame = camera.capture().unwrap();
         video.send(frame);
