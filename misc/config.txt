@@ -1,28 +1,12 @@
 # /boot/config.txt
 
-arm_freq=1000
-core_freq=500
-sdram_freq=500
-over_voltage=6
-
+arm_freq=900
+core_freq=250
+sdram_freq=450
+over_voltage=2
 gpu_mem=128
 
-start_file=start_x.elf
-fixup_file=fixup_x.dat
+dtparam=i2c_arm=on
 
 disable_camera_led=0
-
-# Force the monitor to HDMI mode so that sound will be sent over HDMI cable
-hdmi_drive=2
-# Set monitor mode to DMT
-hdmi_group=2
-# Set monitor resolution to 1024x768 XGA 60Hz (HDMI_DMT_XGA_60)
-hdmi_mode=16
-# Make display smaller to stop text spilling off the screen
-overscan_left=20
-overscan_right=12
-overscan_top=10
-overscan_bottom=10
-
-dtparam=i2c
-
+start_x=0
