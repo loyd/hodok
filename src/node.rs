@@ -5,6 +5,7 @@ use std::sync::Arc;
 use std::sync::mpsc::{self, Sender, Receiver};
 use std::sync::{Once, ONCE_INIT};
 use std::thread;
+use std::time::Duration;
 
 
 pub const STACK_SIZE: usize = 64 * 1024;
@@ -76,12 +77,12 @@ fn get_output<T: Send + Sync + Any>() -> &'static mut Output<T> {
 }
 
 pub fn periodic(rate: f32) -> Receiver<()> {
-    let period = (1000./rate).ceil() as u32;
+    let period = (1e9/rate).ceil() as u32;
     let (tx, rx) = mpsc::channel();
 
     thread::spawn(move || {
         loop {
-            thread::sleep_ms(period);
+            thread::sleep(Duration::new(0, period));
             tx.send(()).unwrap();
         }
     });
