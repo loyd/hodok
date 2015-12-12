@@ -34,11 +34,6 @@ extern {
 }
 
 
-macro_rules! check_io(
-    ($cond:expr) =>
-        (if !$cond { return Err(io::Error::last_os_error()); })
-);
-
 pub struct Serial(c_int);
 
 impl Serial {

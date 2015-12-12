@@ -1,23 +1,6 @@
-use std::convert::From;
-use std::io;
-use std::result;
-
+use base::Result;
 use ifaces::I2C;
 
-
-pub type Result<T> = result::Result<T, Error>;
-
-#[derive(Debug)]
-pub enum Error {
-    Io(io::Error),
-    Unidentified
-}
-
-impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Error {
-        Error::Io(err)
-    }
-}
 
 pub struct Hmc5883l {
     underline: I2C,
@@ -45,7 +28,7 @@ impl Hmc5883l {
     fn identify(i2c: &I2C) -> Result<()> {
         let mut check = [0, 0, 0];
         try!(i2c.read(0x0a, &mut check));
-        if &check != b"H43" { Err(Error::Unidentified) } else { Ok(()) }
+        if &check != b"H43" { Err(From::from("Unidentified device")) } else { Ok(()) }
     }
 
     pub fn set_rate(&mut self, expected: f32) -> Result<f32> {

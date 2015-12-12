@@ -12,11 +12,6 @@ extern {
 }
 
 
-macro_rules! check_io(
-    ($cond:expr) =>
-        (if !$cond { return Err(io::Error::last_os_error()); })
-);
-
 pub struct I2C(c_int);
 
 impl I2C {
