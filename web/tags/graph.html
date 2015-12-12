@@ -1,0 +1,58 @@
+<graph>
+    <canvas></canvas>
+
+    <style scoped>
+    :scope {
+        display: block;
+    }
+
+    canvas {
+        width: 100%;
+        height: 100%;
+    }
+    </style>
+
+    <script>
+    import smoothie from 'smoothie';
+
+
+    let series = new smoothie.TimeSeries;
+
+    let config = {
+        millisPerPixel: 300,
+        grid: {
+            millisPerLine: 5000,
+            strokeStyle: '#555555',
+            sharpLines: true,
+            verticalSections: 1
+        },
+        labels: 'labels' in opts ? { precision: 0 } : { disabled: true }
+    };
+
+    if (opts.min)
+        config.minValue = opts.min;
+
+    if (opts.max)
+        config.maxValue = opts.max;
+
+    if (typeof opts.labels === 'function')
+        config.yMinFormatter = config.yMaxFormatter = opts.labels;
+
+    let chart = new smoothie.SmoothieChart(config);
+
+    chart.addTimeSeries(series, {
+        strokeStyle: '#ffff00',
+        fillStyle: 'rgba(255, 255, 0, .2)',
+        lineWidth: 1
+    });
+
+    this.on('mount', () => {
+        let canvas = this.root.querySelector('canvas');
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
+        chart.streamTo(canvas, 1000);
+    });
+
+    this.on('update', () => series.append(Date.now(), opts.value));
+    </script>
+</graph>

@@ -1,0 +1,51 @@
+<gauge>
+    <div class="progress" style="
+        width: {width(opts.value)}%;
+        background-color: {color(opts.value)};
+    "></div>
+
+    <style scoped>
+    :scope {
+        display: inline-block;
+        border: 1px solid orange;
+    }
+
+    .progress {
+        height: 100%;
+        background-color: blue;
+    }
+
+    :scope, .progress {
+        border-radius: 2px;
+    }
+    </style>
+
+    <script>
+    const pallete = [[87, 87, 87], [0, 255, 0], [0, 0, 255], [255, 0, 0]];
+
+    this.width = value => Math.max(Math.min(value, 100), 0);
+
+    this.color = value => {
+        if (value <= 0)
+            return `rgb(${pallete[0][0]}, ${pallete[0][1]}, ${pallete[0][2]})`;
+
+        if (value >= 100) {
+            let color = pallete[pallete.length-1];
+            return `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+        }
+
+        let i = value/100 * (pallete.length-1);
+        let t = i - (i|0);
+
+        let [from, to] = [pallete[i|0], pallete[i+1|0]];
+
+        let [r, g, b] = [
+            from[0] + (to[0] - from[0])*t|0,
+            from[1] + (to[1] - from[1])*t|0,
+            from[2] + (to[2] - from[2])*t|0
+        ];
+
+        return `rgb(${r}, ${g}, ${b})`;
+    };
+    </script>
+</gauge>
