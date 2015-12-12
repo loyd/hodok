@@ -1,5 +1,5 @@
 [package]
-name = "rusty"
+name = "hodok"
 version = "0.0.0-42"
 authors = ["Paul Loyd <pavelko95@gmail.com>"]
 

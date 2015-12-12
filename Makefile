@@ -21,11 +21,11 @@ ifneq ($(LINKER),)
 	RUSTCFLAGS += -C linker="$(LINKER)"
 endif
 
-all: build/rusty build/index.html build/bundle.js build/assets
+all: build/hodok build/index.html build/bundle.js build/assets
 
-build/rusty: src/*.rs src/*/*.rs src/*/*/*.rs config.mk | build
+build/hodok: src/*.rs src/*/*.rs src/*/*/*.rs config.mk | build
 	cargo rustc $(CARGOFLAGS) -- $(RUSTCFLAGS)
-	cp target/$(TARGET)/debug/rusty $@
+	cp target/$(TARGET)/debug/hodok $@
 
 build/index.html: web/index.html | build
 	cp $< $@
@@ -47,7 +47,7 @@ deploy: all
 	rsync -vrE --delete --progress build/ $(RHOST):$(RPATH)
 
 remrun: deploy
-	ssh -t $(RHOST) 'cd $(RPATH) && ./rusty'
+	ssh -t $(RHOST) 'cd $(RPATH) && ./hodok'
 
 update: clean
 	cargo update
