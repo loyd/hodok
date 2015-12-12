@@ -1,26 +1,25 @@
-<osd>
-    <stream />
-</osd>
-
 <stream>
+    <canvas id="player"></canvas>
+
     <style scoped>
-    canvas {
+    #player {
         display: block;
         margin: 15px auto;
     }
     </style>
 
     <script>
-    import Player from 'broadway/Player';
+    import WSAvcPlayer from 'h264-live-player';
 
     import Channel from '../channel';
 
 
-    let player = new Player({ useWorker: false });
-
-    this.on('mount', () => this.root.appendChild(player.canvas));
+    let player = new WSAvcPlayer(this.player, 'webgl');
+    player.initCanvas(640, 480);
+    this.player.width = 640;
+    this.player.height = 480;
 
     let channel = new Channel('video');
-    channel.on('data', data => player.decode(new Uint8Array(data)));
+    channel.on('data', data => player.avc.decode(new Uint8Array(data)));
     </script>
 </stream>

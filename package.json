@@ -1,6 +1,7 @@
 {
     "dependencies": {
         "domready": "^1.0.7",
+        "h264-live-player": "^1.2.1",
         "riot": "^2.2.4",
         "smoothie": "^1.27.0"
     },
