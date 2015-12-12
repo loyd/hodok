@@ -2,3 +2,4 @@ Cargo.lock
 node_modules/
 target/
 build/
+config.mk

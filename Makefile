@@ -1,7 +1,7 @@
 -include config.mk
 
 TARGET ?=
-RUST ?=
+TOOLCHAIN ?=
 LINKER ?=
 
 RHOST ?=
@@ -10,9 +10,9 @@ RPATH ?=
 
 export PATH := ./node_modules/.bin:$(PATH)
 
-ifneq ($(RUST),)
-	export LD_LIBRARY_PATH := $(RUST)/lib:$(LD_LIBRARY_PATH)
-	export PATH := $(RUST)/bin:$(PATH)
+ifneq ($(TOOLCHAIN),)
+	export LD_LIBRARY_PATH := $(TOOLCHAIN)/lib:$(LD_LIBRARY_PATH)
+	export PATH := $(TOOLCHAIN)/bin:$(PATH)
 endif
 ifneq ($(TARGET),)
 	CARGOFLAGS += --target=$(TARGET)
