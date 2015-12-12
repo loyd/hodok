@@ -4,9 +4,9 @@ use rscam::{Camera, Config};
 use rscam::{CID_MPEG_VIDEO_H264_PROFILE, MPEG_VIDEO_H264_PROFILE_BASELINE};
 use rscam::{CID_MPEG_VIDEO_H264_I_PERIOD, CID_MPEG_VIDEO_REPEAT_SEQ_HEADER, CID_HFLIP, CID_VFLIP};
 
+use base::node;
 use constants::{VIDEO_DEVICE, VIDEO_FPS, VIDEO_RESOLUTION, VIDEO_GOF_SIZE};
 use messages::VideoFrame;
-use node;
 
 
 pub fn worker() {

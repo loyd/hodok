@@ -12,11 +12,10 @@ pub const STACK_SIZE: usize = 64 * 1024;
 
 macro_rules! run_nodes {
     ($node:ident $($nodes:ident)*) => {
-        mod $node;
         let _ = ::std::thread::Builder::new()
             .name(stringify!($node).to_string())
-            .stack_size(::node::STACK_SIZE)
-            .spawn($node::worker).unwrap();
+            .stack_size(::base::node::STACK_SIZE)
+            .spawn(::nodes::$node::worker).unwrap();
         info!("Starting {}...", stringify!($node));
         run_nodes!($($nodes)*);
     };

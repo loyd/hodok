@@ -1,9 +1,9 @@
 use std::fs::File;
 use std::io::Read;
 
+use base::node;
 use constants::SYSINFO_RATE;
 use messages::SysInfo;
-use node;
 
 
 pub struct SysInformer {

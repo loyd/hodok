@@ -1,20 +1,15 @@
 use std::f32::consts::PI;
 use std::mem;
 
+use base::node;
 use constants::{AHRS_DEVICE, AHRS_RATE, ACCEL_RANGE, MAGN_RANGE, GYRO_RANGE};
-use node;
-
+use devices::Adxl345;
+use devices::Hmc5883l;
+use devices::L3g4200d;
 use messages::Attitude;
 
-use self::adxl345::Adxl345;
-use self::hmc5883l::Hmc5883l;
-use self::l3g4200d::L3g4200d;
 use self::madgwick::Madgwick;
 
-mod adxl345;
-mod hmc5883l;
-mod i2c;
-mod l3g4200d;
 mod madgwick;
 
 

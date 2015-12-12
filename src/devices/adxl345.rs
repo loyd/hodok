@@ -2,7 +2,7 @@ use std::convert::From;
 use std::io;
 use std::result;
 
-use super::i2c::I2C;
+use ifaces::I2C;
 
 
 pub type Result<T> = result::Result<T, Error>;
@@ -19,22 +19,22 @@ impl From<io::Error> for Error {
     }
 }
 
-pub struct Hmc5883l {
+pub struct Adxl345 {
     underline: I2C,
     running: bool,
     gain: f32,
     buf: [u8; 6]
 }
 
-impl Hmc5883l {
-    pub fn new(bus: &str) -> Result<Hmc5883l> {
-        Hmc5883l::with_addr(bus, 0x1e)
+impl Adxl345 {
+    pub fn new(bus: &str) -> Result<Adxl345> {
+        Adxl345::with_addr(bus, 0x53)
     }
 
-    pub fn with_addr(bus: &str, addr: u16) -> Result<Hmc5883l> {
+    pub fn with_addr(bus: &str, addr: u16) -> Result<Adxl345> {
         let underline = try!(I2C::open(bus, addr));
-        try!(Hmc5883l::identify(&underline));
-        Ok(Hmc5883l {
+        try!(Adxl345::identify(&underline));
+        Ok(Adxl345 {
             underline: underline,
             running: false,
             gain: 0.,
@@ -43,49 +43,53 @@ impl Hmc5883l {
     }
 
     fn identify(i2c: &I2C) -> Result<()> {
-        let mut check = [0, 0, 0];
-        try!(i2c.read(0x0a, &mut check));
-        if &check != b"H43" { Err(Error::Unidentified) } else { Ok(()) }
+        let mut check = [0];
+        try!(i2c.read(0x00, &mut check));
+        if check[0] != 0xe5 { Err(Error::Unidentified) } else { Ok(()) }
     }
 
     pub fn set_rate(&mut self, expected: f32) -> Result<f32> {
-        static RATES: [f32; 7] = [0.75, 1.5, 3., 7.5, 15., 30., 75.];
+        static RATES: [f32; 16] = [0.1, 0.2, 0.39, 0.78, 1.56, 3.13, 6.25,
+                                   12.5, 25., 50., 100., 200., 400., 800., 1600., 3200.];
+                            //    |<~~~~~~~ Low power mode. ~~~~~~>|
 
-        let ctl = RATES.iter().position(|x| expected <= *x).unwrap_or(6);
+        let mut ctl = RATES.iter().position(|x| expected <= *x).unwrap_or(15);
         let actual = RATES[ctl];
 
-        self.buf[0] = 0x00;
-        self.buf[1] = (ctl as u8) << 2;
+        if 12.5 <= actual && actual <= 400.0 { ctl |= 0x10; }
+
+        self.buf[0] = 0x2c;
+        self.buf[1] = ctl as u8;
 
         try!(self.underline.write(&self.buf[0..2]));
         Ok(actual)
     }
 
     pub fn set_range(&mut self, expected: f32) -> Result<f32> {
-        static RANGES: [f32; 8] = [0.88, 1.3, 1.9, 2.5, 4., 4.7, 5.6, 8.1];
+        static RANGES: [f32; 4] = [2., 4., 8., 16.];
 
-        let ctl = RANGES.iter().position(|x| expected <= *x).unwrap_or(7);
+        let ctl = RANGES.iter().position(|x| expected <= *x).unwrap_or(3);
         let actual = RANGES[ctl];
 
-        self.buf[0] = 0x01;
-        self.buf[1] = (ctl as u8) << 5;
+        self.buf[0] = 0x31;
+        self.buf[1] = ctl as u8 | 0x08;   // Full resolution mode.
 
-        self.gain = actual/2048. + 0.0003;
+        self.gain = actual/((512 << ctl) as f32);
 
         try!(self.underline.write(&self.buf[0..2]));
         Ok(actual)
     }
 
     pub fn start(&mut self) -> Result<()> {
-        self.buf[0] = 0x02;
-        self.buf[1] = 0x00;
+        self.buf[0] = 0x2d;
+        self.buf[1] = 0x08;
         try!(self.underline.write(&self.buf[0..2]));
         self.running = true;
         Ok(())
     }
 
     pub fn measure(&mut self) -> Result<(f32, f32, f32)> {
-        try!(self.underline.read(0x03, &mut self.buf));
+        try!(self.underline.read(0x32, &mut self.buf));
         Ok((
             ((self.buf[1] as i16) << 8 | (self.buf[0] as i16)) as f32 * self.gain,
             ((self.buf[3] as i16) << 8 | (self.buf[2] as i16)) as f32 * self.gain,
@@ -94,15 +98,15 @@ impl Hmc5883l {
     }
 
     pub fn stop(&mut self) -> Result<()> {
-        self.buf[0] = 0x02;
-        self.buf[1] = 0x02;
+        self.buf[0] = 0x2d;
+        self.buf[1] = 0x00;
         try!(self.underline.write(&self.buf[0..2]));
         self.running = false;
         Ok(())
     }
 }
 
-impl Drop for Hmc5883l {
+impl Drop for Adxl345 {
     fn drop(&mut self) {
         if self.running {
             let _ = self.stop();

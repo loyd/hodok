@@ -11,18 +11,19 @@ extern crate rustc_serialize;
 extern crate sha1;
 
 #[macro_use]
-mod node;
+mod base;
 mod constants;
-mod logger;
+mod devices;
+mod ifaces;
 mod messages;
+mod nodes;
 
 
 fn main() {
-    logger::init().unwrap();
+    base::logger::init().unwrap();
 
     run_nodes![
         ahrs
-        control
         server
         sysinfo
         video
