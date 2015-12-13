@@ -69,38 +69,38 @@ impl Madgwick {
 
             // Reference direction of Earth's magnetic field.
             let hx = mx * q0q0 - _2q0my * q.3 + _2q0mz * q.2 + mx * q1q1 + _2q1 * my * q.2
-                       + _2q1 * mz * q.3 - mx * q2q2 - mx * q3q3;
+                   + _2q1 * mz * q.3 - mx * q2q2 - mx * q3q3;
             let hy = _2q0mx * q.3 + my * q0q0 - _2q0mz * q.1 + _2q1mx * q.2 - my * q1q1
-                       + my * q2q2 + _2q2 * mz * q.3 - my * q3q3;
+                   + my * q2q2 + _2q2 * mz * q.3 - my * q3q3;
             let _2bx = (hx * hx + hy * hy).sqrt();
             let _2bz = -_2q0mx * q.2 + _2q0my * q.1 + mz * q0q0 + _2q1mx * q.3 - mz * q1q1
-                 + _2q2 * my * q.3 - mz * q2q2 + mz * q3q3;
-            let _4bx = 2. * _2bx;
-            let _4bz = 2. * _2bz;
+                     + _2q2 * my * q.3 - mz * q2q2 + mz * q3q3;
+            let _4bx = _2bx + _2bx;
+            let _4bz = _2bz + _2bz;
+            let _8bx = _4bx + _4bx;
+            let _8bz = _4bz + _4bz;
 
-            // Gradient descent algorithm corrective step.
-            let s = (-_2q2 * (2.*q1q3 - _2q0q2 - ax) + _2q1 * (2.*q0q1 + _2q2q3 - ay)
-                     - _2bz * q.2 * (_2bx * (0.5 - q2q2 - q3q3) + _2bz * (q1q3 - q0q2) - mx)
-                     + (-_2bx * q.3 + _2bz * q.1) * (_2bx * (q1q2 - q0q3) + _2bz * (q0q1 + q2q3)
-                     - my) + _2bx * q.2 * (_2bx *(q0q2+q1q3) + _2bz*(0.5 - q1q1 - q2q2) - mz),
+            // Gradient decent algorithm corrective step.
+            let s = (-_2q2*(2.*(q1q3 - q0q2) - ax) + _2q1*(2.*(q0q1 + q2q3) - ay) -
+                     _4bz*q.2*(_4bx*(0.5 - q2q2 - q3q3) + _4bz*(q1q3 - q0q2) - mx) +
+                     (-_4bx*q.3+_4bz*q.1)*(_4bx*(q1q2 - q0q3) + _4bz*(q0q1 + q2q3) - my) +
+                     _4bx*q.2*(_4bx*(q0q2 + q1q3) + _4bz*(0.5 - q1q1 - q2q2) - mz),
 
-                     _2q3 * (2.*q1q3 - _2q0q2 - ax) + _2q0 * (2.*q0q1 + _2q2q3 - ay)
-                     - 4. * q.1 * (1. - 2.*q1q1 - 2.*q2q2 - az) + _2bz * q.3 * (_2bx
-                     * (0.5 - q2q2 - q3q3) + _2bz * (q1q3 - q0q2) - mx) + (_2bx * q.2 + _2bz
-                     * q.0) * (_2bx * (q1q2 - q0q3) + _2bz * (q0q1 + q2q3) - my) + (_2bx * q.3
-                     - _4bz * q.1) * (_2bx * (q0q2 + q1q3) + _2bz * (0.5 - q1q1 - q2q2) - mz),
+                     _2q3*(2.*(q1q3 - q0q2) - ax) + _2q0*(2.*(q0q1 + q2q3) - ay) + -4.*q.1*(2. *
+                     (0.5 - q1q1 - q2q2) - az) + _4bz*q.3*(_4bx*(0.5 - q2q2 - q3q3) + _4bz*(q1q3 -
+                     q0q2) - mx) + (_4bx*q.2+_4bz*q.0)*(_4bx*(q1q2 - q0q3) + _4bz*(q0q1 + q2q3) -
+                     my) + (_4bx*q.3-_8bz*q.1)*(_4bx*(q0q2 + q1q3) + _4bz*(0.5 - q1q1 - q2q2) - mz),
 
-                     -_2q0 * (2.*q1q3 - _2q0q2 - ax) + _2q3 * (2.*q0q1 + _2q2q3 - ay)
-                     - 4. * q.2 * (1. - 2.*q1q1 - 2.*q2q2 - az) + (-_4bx * q.2 - _2bz * q.0)
-                     * (_2bx * (0.5 - q2q2 - q3q3) + _2bz * (q1q3 - q0q2) - mx) + (_2bx * q.1
-                     + _2bz * q.3) * (_2bx * (q1q2 - q0q3) + _2bz * (q0q1 + q2q3) - my) + (_2bx
-                     * q.0 - _4bz*q.2) * (_2bx * (q0q2+q1q3) + _2bz * (0.5 - q1q1-q2q2) - mz),
+                     -_2q0*(2.*(q1q3 - q0q2) - ax) + _2q3*(2.*(q0q1 + q2q3) - ay) + (-4.*q.2)*(2. *
+                     (0.5 - q1q1 - q2q2) - az) + (-_8bx*q.2-_4bz*q.0)*(_4bx*(0.5 - q2q2 - q3q3) +
+                     _4bz*(q1q3 - q0q2) - mx)+(_4bx*q.1+_4bz*q.3)*(_4bx*(q1q2 - q0q3) +
+                     _4bz*(q0q1 + q2q3) - my)+(_4bx*q.0-_8bz*q.2)*(_4bx*(q0q2 + q1q3) +
+                     _4bz*(0.5 - q1q1 - q2q2) - mz),
 
-                     _2q1 * (2.*q1q3 - _2q0q2 - ax) + _2q2 * (2.*q0q1 + _2q2q3 - ay)
-                     + (-_4bx * q.3 + _2bz * q.1) * (_2bx * (0.5 - q2q2 - q3q3) + _2bz * (q1q3
-                     - q0q2) - mx) + (-_2bx * q.0 + _2bz * q.2) * (_2bx * (q1q2 - q0q3) + _2bz
-                     * (q0q1 + q2q3) - my) + _2bx * q.1 * (_2bx * (q0q2 + q1q3) + _2bz * (0.5
-                     - q1q1 - q2q2) - mz));
+                     _2q1*(2.*(q1q3 - q0q2) - ax) + _2q2*(2.*(q0q1 + q2q3) - ay) +
+                     (-_8bx*q.3+_4bz*q.1)*(_4bx*(0.5 - q2q2 - q3q3) + _4bz*(q1q3 - q0q2) - mx) +
+                     (-_4bx*q.0+_4bz*q.2)*(_4bx*(q1q2 - q0q3) + _4bz*(q0q1 + q2q3) - my) +
+                     (_4bx*q.1)*(_4bx*(q0q2 + q1q3) + _4bz*(0.5 - q1q1 - q2q2) - mz));
 
             recip_norm = (s.0*s.0 + s.1*s.1 + s.2*s.2 + s.3*s.3).sqrt().recip();
 

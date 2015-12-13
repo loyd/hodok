@@ -30,7 +30,7 @@
         <div class="right-half">Roll: <b>{(roll*RAD_TO_DEG).toFixed()}°</b></div>
         </div>
         <div class="indicator">
-            <div class="box" style="transform: rotate({roll}rad)">
+            <div class="box" style="transform: rotate({-roll}rad)">
                 <img class="box" src="assets/horizon_back.svg" />
                 <img class="box" src="assets/horizon_ball.svg"
                      style="top: {Math.max(Math.min(pitch*RAD_TO_DEG, 30), -30)*.7}%" />
@@ -165,12 +165,12 @@
     let attitude = new Channel('attitude');
     attitude.on('data', data => {
         let attitude = parseAttitude(data);
-        let angles = quaternionToEuler(attitude);
+        let angles = quaterionToTaitBryan(attitude);
 
-        this.pitch = -angles.roll;
-        this.roll = angles.pitch;
         // Temporary hack: why does zero yaw point to the East?
-        this.yaw = Math.PI + angles.yaw;
+        this.yaw = angles.yaw;
+        this.pitch = angles.pitch;
+        this.roll = angles.roll;
 
         this.update();
     });
@@ -186,11 +186,11 @@
         return [w, x, y, z];
     }
 
-    function quaternionToEuler([w, x, y, z]) {
+    function quaterionToTaitBryan([w, x, y, z]) {
         return {
-            pitch: -Math.asin(2*(x*z + w*y)),
-            roll: Math.atan2(2*(y*z - w*x), 2*(w*w + z*z) - 1),
-            yaw: Math.atan2(2*(x*y - w*z), 2*(w*w + x*x) - 1),
+            yaw: Math.atan2(2 * (x*y + w*z), w*w + x*x - y*y - z*z),
+            pitch: -Math.asin(2 * (x*z - w*y)),
+            roll: Math.atan2(2 * (w*x + y*z), w*w - x*x - y*y + z*z)
         };
     }
 
